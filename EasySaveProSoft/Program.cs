@@ -10,7 +10,7 @@ namespace EasySaveProSoft
     {
         static void Main(string[] args)
         {
-            
+            Console.WriteLine("testing with git extensions");
         }
     }
 }
