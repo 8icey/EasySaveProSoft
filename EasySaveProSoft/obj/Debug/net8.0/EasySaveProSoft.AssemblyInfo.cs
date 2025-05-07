@@ -14,7 +14,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("EasySaveProSoft")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+a80110cee354ab3eaf2d7a7592795e569a22aee6")]
 [assembly: System.Reflection.AssemblyProductAttribute("EasySaveProSoft")]
 [assembly: System.Reflection.AssemblyTitleAttribute("EasySaveProSoft")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]
