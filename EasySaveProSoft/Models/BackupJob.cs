@@ -1,149 +1,140 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
-using EasySaveProSoft.Helpers;
 using EasySaveProSoft.Models;
 using EasySaveProSoft.Services;
 
 namespace EasySaveProSoft.Models
 {
-    // Represents a backup job
     public class BackupJob
     {
-        // Properties of the backup job
         public string Name { get; set; }
         public string SourcePath { get; set; }
         public string TargetPath { get; set; }
         public BackupType Type { get; set; }
         public DateTime LastBackupDate { get; set; }
 
-        private readonly Logger _logger = new Logger(); // Logger instance
+        private readonly Logger _logger = new Logger();
 
-        // Runs the backup job
         public void Execute()
         {
-            Console.WriteLine($"[DEBUG] Starting Execute() for job: {Name}");
-
-            // Validate source path
-            if (!Directory.Exists(SourcePath))
+            Console.WriteLine($"\n[+] Executing {Type} Backup for '{Name}'...");
+            if (!Directory.Exists(SourcePath) || !Directory.Exists(TargetPath))
             {
-                string msg = $"Source path does not exist: {SourcePath}";
-                Console.WriteLine($"[ERROR] {msg}");
-                try { _logger.LogError(new DirectoryNotFoundException(msg)); }
-                catch (Exception ex) { Console.WriteLine($"[FATAL] Logging failed: {ex.Message}"); }
+                Console.WriteLine("[!] Source or target path not found.");
                 return;
             }
 
-            // Validate target path
-            if (!Directory.Exists(TargetPath))
+            var files = Directory.GetFiles(SourcePath, "*", SearchOption.AllDirectories);
+            int totalFiles = files.Length;
+            long totalSize = 0;
+            long transferredSize = 0;
+
+            foreach (var file in files)
             {
-                string msg = $"Target path does not exist: {TargetPath}";
-                Console.WriteLine($"[ERROR] {msg}");
-                try { _logger.LogError(new DirectoryNotFoundException(msg)); }
-                catch (Exception ex) { Console.WriteLine($"[FATAL] Logging failed: {ex.Message}"); }
-                return;
+                totalSize += new FileInfo(file).Length;
             }
 
-            // Get all files recursively from source
-            string[] files;
-            try
-            {
-                files = Directory.GetFiles(SourcePath, "*", SearchOption.AllDirectories);
-            }
-            catch (Exception ex)
-            {
-                Console.WriteLine($"[ERROR] Failed to get files: {ex.Message}");
-                try { _logger.LogError(ex); }
-                catch (Exception logEx) { Console.WriteLine($"[FATAL] Logging failed: {logEx.Message}"); }
-                return;
-            }
+            Console.WriteLine($"[+] Found {totalFiles} files to process ({FormatSize(totalSize)})...");
 
-            Console.WriteLine($"[+] Found {files.Length} files to process...");
+            Stopwatch globalTimer = Stopwatch.StartNew();
+            int currentFile = 0;
 
-            // Process each file
+            // 👇 Save the current cursor position
+            int progressBarLine = Console.CursorTop;
+            Console.WriteLine(); // Create an empty line for the progress bar
+
             foreach (var file in files)
             {
                 string relativePath = Path.GetRelativePath(SourcePath, file);
                 string destinationFile = Path.Combine(TargetPath, relativePath);
 
-                try
-                {
-                    // Ensure target directory exists
-                    Directory.CreateDirectory(Path.GetDirectoryName(destinationFile) ?? string.Empty);
-                }
-                catch (Exception ex)
-                {
-                    Console.WriteLine($"[ERROR] Could not create directory for {destinationFile}: {ex.Message}");
-                    try { _logger.LogError(ex); }
-                    catch (Exception logEx) { Console.WriteLine($"[FATAL] Logging failed: {logEx.Message}"); }
-                    continue;
-                }
+                Directory.CreateDirectory(Path.GetDirectoryName(destinationFile) ?? string.Empty);
 
-                // Check whether to copy (full or newer in differential)
                 if (Type == BackupType.Full || (Type == BackupType.Differential && IsNewer(file, destinationFile)))
                 {
-                    TimeSpan elapsed = TimeSpan.Zero;
-                    bool success = false;
-
+                    var timer = Stopwatch.StartNew();
                     try
                     {
-                        elapsed = TimerUtil.MeasureExecution(() =>
+                        File.Copy(file, destinationFile, true);
+                        timer.Stop();
+
+                        long fileSize = new FileInfo(file).Length;
+                        transferredSize += fileSize;
+
+                        var fileItem = new FileItem
                         {
-                            if (File.Exists(destinationFile))
-                                File.SetAttributes(destinationFile, FileAttributes.Normal);
+                            SourcePath = file,
+                            DestinationPath = destinationFile,
+                            Size = fileSize,
+                            TransferTime = timer.Elapsed,
+                            IsSuccess = true
+                        };
 
-                            File.Copy(file, destinationFile, true);
-                        });
+                        _logger.LogFileTransfer(fileItem);
 
-                        success = true;
-                        Console.WriteLine($"[✓] Copied: {file} → {destinationFile}");
+                        // ✅ Real-time update in the same line
+                        currentFile++;
+                        DisplayProgress(currentFile, totalFiles, transferredSize, totalSize, globalTimer.Elapsed, progressBarLine);
+
                     }
                     catch (Exception ex)
                     {
-                        Console.WriteLine($"[ERROR] Failed to copy {file}: {ex.Message}");
-                        try { _logger.LogError(ex); }
-                        catch (Exception logEx) { Console.WriteLine($"[FATAL] Logging failed: {logEx.Message}"); }
+                        Console.WriteLine($"[ERROR] Could not copy file: {file}");
+                        Console.WriteLine($"[ERROR] Reason: {ex.Message}");
                     }
-
-                    // Log transfer details
-                    var fileItem = new FileItem
-                    {
-                        SourcePath = file,
-                        DestinationPath = destinationFile,
-                        Size = new FileInfo(file).Length,
-                        TransferTime = elapsed,
-                        IsSuccess = success
-                    };
-
-                    _logger.LogFileTransfer(fileItem);
                 }
             }
 
-            // Finalize
-            LastBackupDate = DateTime.Now;
-            Console.WriteLine($"[+] Backup completed at {LastBackupDate}.");
+            globalTimer.Stop();
+            Console.WriteLine($"\n[✓] Backup completed at {LastBackupDate}.");
         }
 
-        // Compares file modification timestamps to decide if file should be copied
         private bool IsNewer(string sourceFile, string destinationFile)
         {
-            try
-            {
-                if (!File.Exists(destinationFile))
-                    return true;
+            if (!File.Exists(destinationFile))
+                return true;
 
-                DateTime sourceModified = File.GetLastWriteTime(sourceFile);
-                DateTime targetModified = File.GetLastWriteTime(destinationFile);
+            DateTime sourceModified = File.GetLastWriteTime(sourceFile);
+            DateTime targetModified = File.GetLastWriteTime(destinationFile);
 
-                return sourceModified > targetModified;
-            }
-            catch (Exception ex)
+            return sourceModified > targetModified;
+        }
+
+        private void DisplayProgress(int current, int total, long transferred, long totalSize, TimeSpan elapsed, int progressBarLine)
+        {
+            // Calculate progress
+            double percent = (double)current / total * 100;
+
+            // Calculate estimated time remaining
+            double avgTimePerFile = elapsed.TotalSeconds / current;
+            double estimatedRemainingTime = avgTimePerFile * (total - current);
+
+            // Draw progress bar
+            int barWidth = 30;
+            int progressBlocks = (int)((percent / 100) * barWidth);
+
+            // Prepare the progress line
+            string progressLine = $"[{new string('=', progressBlocks)}{new string(' ', barWidth - progressBlocks)}] " +
+                                  $"{percent:F1}% | {FormatSize(transferred)}/{FormatSize(totalSize)} | ETA: {TimeSpan.FromSeconds(estimatedRemainingTime):mm\\:ss}";
+
+            // **Move cursor back up to the progress bar line**
+            Console.SetCursorPosition(0, progressBarLine);
+            Console.Write(progressLine.PadRight(Console.WindowWidth - 1));
+        }
+
+        private string FormatSize(long bytes)
+        {
+            string[] sizes = { "B", "KB", "MB", "GB", "TB" };
+            double len = bytes;
+            int order = 0;
+            while (len >= 1024 && order < sizes.Length - 1)
             {
-                Console.WriteLine($"[ERROR] Could not compare timestamps: {ex.Message}");
-                try { _logger.LogError(ex); }
-                catch (Exception logEx) { Console.WriteLine($"[FATAL] Logging failed: {logEx.Message}"); }
-                return false;
+                order++;
+                len /= 1024;
             }
+            return $"{len:0.##} {sizes[order]}";
         }
 
         // Validates both paths exist
@@ -151,6 +142,8 @@ namespace EasySaveProSoft.Models
         {
             return Directory.Exists(SourcePath) && Directory.Exists(TargetPath);
         }
-    }
 
+    }
 }
+
+
