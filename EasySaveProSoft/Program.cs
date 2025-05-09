@@ -3,15 +3,15 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-
+using EasySaveProSoft.Views;
 namespace EasySaveProSoft
 {
-    class EasySaveProSoft
+    class Program
     {
         static void Main(string[] args)
         {
-            Console.WriteLine("Nouf-testing with git extensions");
-            int amine = 5;
+            ConsoleUI ui = new ConsoleUI();
+            ui.DisplayMenu();
         }
     }
 }
