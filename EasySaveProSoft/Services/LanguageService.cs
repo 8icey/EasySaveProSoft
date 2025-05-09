@@ -6,11 +6,17 @@ using System.Threading.Tasks;
 
 namespace EasySaveProSoft.Services
 {
+    // Provides simple multi-language translation for menu texts and prompts
     public class LanguageService
     {
+        // Holds the currently selected language dictionary (e.g. "en", "fr")
         private Dictionary<string, string> _currentDictionary;
+
+        // Stores the language code currently in use
         public string CurrentLanguage { get; private set; }
 
+        // All supported translations are defined in this dictionary
+        // Each language maps to its own string-key/value dictionary
         private readonly Dictionary<string, Dictionary<string, string>> _translations = new Dictionary<string, Dictionary<string, string>>()
         {
             {
@@ -53,6 +59,8 @@ namespace EasySaveProSoft.Services
             }
         };
 
+        // Selects a language by code (e.g., "en", "fr")
+        // Falls back to English if the language is unsupported
         public void SetLanguage(string langCode)
         {
             if (_translations.ContainsKey(langCode))
@@ -68,6 +76,8 @@ namespace EasySaveProSoft.Services
             }
         }
 
+        // Retrieves the translated string based on a given key
+        // If the key is not found, the key itself is returned as fallback
         public string Translate(string key)
         {
             return _currentDictionary.ContainsKey(key) ? _currentDictionary[key] : key;
