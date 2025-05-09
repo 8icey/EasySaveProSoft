@@ -47,5 +47,11 @@ namespace EasySaveProSoft.ViewModels
         {
             Manager.RunAllJobs();
         }
+
+
+        public void DisplayJobs()
+        {
+            Manager.DisplayJobs();
+        }
     }
 }

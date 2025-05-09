@@ -5,54 +5,51 @@ using EasySaveProSoft.Services;
 
 namespace EasySaveProSoft.Models
 {
-    // This class manages a list of backup jobs: adding, executing individually or all at once.
     public class BackupManager
     {
-        // Stores the list of all backup jobs
         public List<BackupJob> Jobs { get; private set; }
-
-        // Logger instance for error and file transfer logging
         private readonly Logger _logger = new Logger();
-
-        // Handles saving/loading jobs to/from a JSON file
         private readonly JsonHandler _jsonHandler = new JsonHandler();
+        private const int MaxJobs = 5;
 
-        // Constructor: loads jobs from persistent storage (JSON file) when the app starts
+        // Load jobs from persistent storage (JSON file)
         public BackupManager()
         {
             Jobs = _jsonHandler.LoadJobs();
         }
 
-        // Adds a new backup job and saves the updated list to disk
+        // Add a new backup job and save to JSON
         public void AddJob(BackupJob job)
         {
+            if (Jobs.Count >= MaxJobs)
+            {
+                Console.WriteLine("[!] Maximum number of backup jobs reached (5). Delete a job to add a new one.");
+                return;
+            }
+
             Jobs.Add(job);
             _jsonHandler.SaveJobs(Jobs);
             Console.WriteLine($"[+] Backup Job '{job.Name}' added successfully!");
         }
 
-        // Finds and executes a backup job by name
+        // Find and execute a backup job by name, then delete it
         public void RunJob(string name)
         {
-            // Case-insensitive search for the job by its name
             var job = Jobs.Find(j => j.Name.Equals(name, StringComparison.OrdinalIgnoreCase));
-
             if (job != null)
             {
-                // If found, execute the job and save updated state (like LastBackupDate)
                 job.Execute();
-                _jsonHandler.SaveJobs(Jobs);
+                _jsonHandler.DeleteJob(name, Jobs);  // Delete after execution
             }
             else
             {
-                // If not found, notify user and log the error
                 string msg = $"No backup job found with the name: {name}";
                 Console.WriteLine($"[ERROR] {msg}");
                 _logger.LogError(new KeyNotFoundException(msg));
             }
         }
 
-        // Executes all backup jobs in the list
+        // Execute all backup jobs and delete each one after completion
         public void RunAllJobs()
         {
             if (Jobs.Count == 0)
@@ -61,14 +58,38 @@ namespace EasySaveProSoft.Models
             }
             else
             {
-                // Execute each job one by one
+                var jobsToDelete = new List<string>();
                 foreach (var job in Jobs)
                 {
                     job.Execute();
+                    jobsToDelete.Add(job.Name);
                 }
 
-                // Save the updated state after all jobs are done
-                _jsonHandler.SaveJobs(Jobs);
+                // Delete all jobs from JSON after execution
+                foreach (var jobName in jobsToDelete)
+                {
+                    _jsonHandler.DeleteJob(jobName, Jobs);
+                }
+            }
+        }
+
+        // ✅ **NEW** — Display all backup jobs in the console
+        public void DisplayJobs()
+        {
+            if (Jobs.Count == 0)
+            {
+                Console.WriteLine("[!] No backup jobs available.");
+            }
+            else
+            {
+                Console.WriteLine("=== List of Backup Jobs ===");
+                foreach (var job in Jobs)
+                {
+                    Console.WriteLine($"- Name: {job.Name}");
+                    Console.WriteLine($"  Source: {job.SourcePath}");
+                    Console.WriteLine($"  Target: {job.TargetPath}");
+                    Console.WriteLine($"  Type: {job.Type}\n");
+                }
             }
         }
     }

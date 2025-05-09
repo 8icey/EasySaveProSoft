@@ -16,33 +16,32 @@ namespace EasySaveProSoft.Services
         // Serializes the list of backup jobs and saves it to a file
         public void SaveJobs(List<BackupJob> jobs)
         {
-            // Convert the list of jobs to JSON format with indentation for readability
             string json = JsonConvert.SerializeObject(jobs, Newtonsoft.Json.Formatting.Indented);
-
-            // Overwrite the file with the latest job list
             File.WriteAllText(_filePath, json);
-
             Console.WriteLine("[✓] Backup jobs saved to backupWorks.json");
         }
 
         // Loads the list of backup jobs from the JSON file
         public List<BackupJob> LoadJobs()
         {
-            // If the file does not exist, return an empty list
             if (!File.Exists(_filePath))
             {
                 Console.WriteLine("[!] No previous backup jobs found.");
                 return new List<BackupJob>();
             }
 
-            // Read and deserialize the JSON content into a list of BackupJob objects
             string json = File.ReadAllText(_filePath);
             var jobs = JsonConvert.DeserializeObject<List<BackupJob>>(json);
-
             Console.WriteLine("[✓] Loaded previous backup jobs from backupWorks.json");
-
-            // If deserialization fails and returns null, return an empty list
             return jobs ?? new List<BackupJob>();
+        }
+
+        //  **NEW** — Deletes the job from JSON after execution
+        public void DeleteJob(string jobName, List<BackupJob> jobs)
+        {
+            jobs.RemoveAll(job => job.Name.Equals(jobName, StringComparison.OrdinalIgnoreCase));
+            SaveJobs(jobs); // Save changes back to the JSON file
+            Console.WriteLine($"[✓] Backup job '{jobName}' has been deleted after execution.");
         }
     }
 }
