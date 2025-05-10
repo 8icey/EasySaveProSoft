@@ -7,7 +7,7 @@ using System.Threading.Tasks;
 namespace EasySaveProSoft.Models
 {
     // Enum representing the type of backup job
-    public enum BackupType
+    public enum BackupType 
     {
         // Full backup: copies all files regardless of modification date
         Full,

@@ -36,6 +36,7 @@ namespace EasySaveProSoft.Services
             return jobs ?? new List<BackupJob>();
         }
 
+
         //  **NEW** — Deletes the job from JSON after execution
         public void DeleteJob(string jobName, List<BackupJob> jobs)
         {

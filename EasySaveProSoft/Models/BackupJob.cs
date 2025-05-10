@@ -141,7 +141,7 @@ namespace EasySaveProSoft.Models
         public bool IsValid()
         {
             return Directory.Exists(SourcePath) && Directory.Exists(TargetPath);
-        }
+        } 
 
     }
 }

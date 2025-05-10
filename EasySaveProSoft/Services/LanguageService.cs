@@ -15,6 +15,7 @@ namespace EasySaveProSoft.Services
         // Stores the language code currently in use
         public string CurrentLanguage { get; private set; }
 
+
         // All supported translations are defined in this dictionary
         // Each language maps to its own string-key/value dictionary
         private readonly Dictionary<string, Dictionary<string, string>> _translations = new Dictionary<string, Dictionary<string, string>>()

@@ -9,6 +9,7 @@ namespace EasySaveProSoft.Services
     // - Daily logs for successful file transfers
     // - Error logs for exceptions during backup operations
     public class Logger
+
     {
         // Path for the main log file (successful transfers)
         private readonly string _logFilePath = "DailyLog.json";

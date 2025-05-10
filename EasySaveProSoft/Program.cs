@@ -7,6 +7,7 @@ namespace EasySaveProSoft
     // Entry point for the EasySaveProSoft application
     class Program
     {
+
         static void Main(string[] args)
         {
             // Initialize and launch the console user interface

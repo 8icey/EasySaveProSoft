@@ -10,6 +10,7 @@ namespace EasySaveProSoft.Views
         private readonly BackupManagerViewModel _viewModel = new BackupManagerViewModel();
         private readonly LanguageService _languageService = new LanguageService();
 
+
         public ConsoleUI()
         {
             string lang;

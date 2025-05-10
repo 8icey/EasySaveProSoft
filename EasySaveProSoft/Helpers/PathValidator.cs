@@ -7,6 +7,6 @@ using System.Threading.Tasks;
 namespace EasySaveProSoft.Helpers
 {
     internal class PathValidator
-    {
+    { 
     }
 }

@@ -19,7 +19,7 @@ namespace EasySaveProSoft.Helpers
             var stopwatch = System.Diagnostics.Stopwatch.StartNew(); // Start the stopwatch
             action();                                                 // Execute the provided action
             stopwatch.Stop();                                         // Stop the stopwatch
-            return stopwatch.Elapsed;                                 // Return the elapsed time
+            return stopwatch.Elapsed;                                  // Return the elapsed time
         }
     }
 }

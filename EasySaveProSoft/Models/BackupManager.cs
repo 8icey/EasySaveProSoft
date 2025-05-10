@@ -5,7 +5,7 @@ using EasySaveProSoft.Services;
 
 namespace EasySaveProSoft.Models
 {
-    public class BackupManager
+    public class BackupManager 
     {
         public List<BackupJob> Jobs { get; private set; }
         private readonly Logger _logger = new Logger();

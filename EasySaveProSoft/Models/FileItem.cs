@@ -7,7 +7,8 @@ using System.Threading.Tasks;
 namespace EasySaveProSoft.Models
 {
     // Represents a file that has been backed up (or attempted)
-    public class FileItem
+    public class FileItem 
+
     {
         // The original path of the file before backup
         public string SourcePath { get; set; }
