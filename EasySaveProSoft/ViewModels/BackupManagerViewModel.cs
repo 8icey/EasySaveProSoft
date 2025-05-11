@@ -1,13 +1,7 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using EasySaveProSoft.Models;
+﻿using EasySaveProSoft.Models;
 
 namespace EasySaveProSoft.ViewModels
 {
-    // Acts as a ViewModel layer between the UI (Console) and the BackupManager logic
     public class BackupManagerViewModel
     {
         // The underlying backup manager instance that handles job logic
@@ -16,7 +10,6 @@ namespace EasySaveProSoft.ViewModels
         // Creates a new backup job and adds it if paths are valid
         public void CreateBackupJob(string name, string source, string target, BackupType type)
         {
-            // Construct a backup job using input parameters
             BackupJob job = new BackupJob
             {
                 Name = name,
@@ -25,7 +18,6 @@ namespace EasySaveProSoft.ViewModels
                 Type = type
             };
 
-            // Check if the job paths are valid before adding
             if (job.IsValid())
             {
                 Manager.AddJob(job);
@@ -48,11 +40,16 @@ namespace EasySaveProSoft.ViewModels
             Manager.RunAllJobs();
         }
 
-
-
+        // Displays all backup jobs
         public void DisplayJobs()
         {
             Manager.DisplayJobs();
+        }
+
+        // ✅ **NEW** — Delete a job by name
+        public void DeleteBackup(string name)
+        {
+            Manager.DeleteJob(name);
         }
     }
 }

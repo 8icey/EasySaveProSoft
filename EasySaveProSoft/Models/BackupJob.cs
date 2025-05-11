@@ -19,6 +19,7 @@ namespace EasySaveProSoft.Models
 
         public void Execute()
         {
+            
             Console.WriteLine($"\n[+] Executing {Type} Backup for '{Name}'...");
             if (!Directory.Exists(SourcePath) || !Directory.Exists(TargetPath))
             {
@@ -88,7 +89,8 @@ namespace EasySaveProSoft.Models
             }
 
             globalTimer.Stop();
-            Console.WriteLine($"\n[✓] Backup completed at {LastBackupDate}.");
+            LastBackupDate = DateTime.Now;
+            Console.WriteLine($"\n[✓] Backup completed at {LastBackupDate = DateTime.Now}.");
         }
 
         private bool IsNewer(string sourceFile, string destinationFile)

@@ -5,7 +5,7 @@ using EasySaveProSoft.Services;
 
 namespace EasySaveProSoft.Models
 {
-    public class BackupManager 
+    public class BackupManager
     {
         public List<BackupJob> Jobs { get; private set; }
         private readonly Logger _logger = new Logger();
@@ -39,7 +39,6 @@ namespace EasySaveProSoft.Models
             if (job != null)
             {
                 job.Execute();
-                _jsonHandler.DeleteJob(name, Jobs);  // Delete after execution
             }
             else
             {
@@ -49,7 +48,7 @@ namespace EasySaveProSoft.Models
             }
         }
 
-        // Execute all backup jobs and delete each one after completion
+        // Execute all backup jobs
         public void RunAllJobs()
         {
             if (Jobs.Count == 0)
@@ -58,22 +57,30 @@ namespace EasySaveProSoft.Models
             }
             else
             {
-                var jobsToDelete = new List<string>();
                 foreach (var job in Jobs)
                 {
                     job.Execute();
-                    jobsToDelete.Add(job.Name);
-                }
-
-                // Delete all jobs from JSON after execution
-                foreach (var jobName in jobsToDelete)
-                {
-                    _jsonHandler.DeleteJob(jobName, Jobs);
                 }
             }
         }
 
-        // ✅ **NEW** — Display all backup jobs in the console
+        // ✅ **NEW** — Delete a job from the list and the JSON
+        public void DeleteJob(string name)
+        {
+            var job = Jobs.Find(j => j.Name.Equals(name, StringComparison.OrdinalIgnoreCase));
+            if (job != null)
+            {
+                Jobs.Remove(job);
+                _jsonHandler.SaveJobs(Jobs);  // Save the new state to JSON
+                Console.WriteLine($"[✓] Backup job '{name}' has been deleted successfully.");
+            }
+            else
+            {
+                Console.WriteLine($"[!] No backup job found with the name '{name}'.");
+            }
+        }
+
+        // Display all backup jobs in the console
         public void DisplayJobs()
         {
             if (Jobs.Count == 0)
