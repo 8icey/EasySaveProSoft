@@ -91,6 +91,8 @@ namespace EasySaveProSoft.Models
             globalTimer.Stop();
             LastBackupDate = DateTime.Now;
             Console.WriteLine($"\n[✓] Backup completed at {LastBackupDate = DateTime.Now}.");
+            
+            
         }
 
         private bool IsNewer(string sourceFile, string destinationFile)
