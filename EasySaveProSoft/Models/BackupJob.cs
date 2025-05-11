@@ -99,7 +99,7 @@ namespace EasySaveProSoft.Models
         {
             if (!File.Exists(destinationFile))
                 return true;
-
+             
             DateTime sourceModified = File.GetLastWriteTime(sourceFile);
             DateTime targetModified = File.GetLastWriteTime(destinationFile);
 
