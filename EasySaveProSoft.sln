@@ -4,6 +4,8 @@ VisualStudioVersion = 17.13.35931.197
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "EasySaveProSoft", "EasySaveProSoft\EasySaveProSoft.csproj", "{46F9902E-67BF-4EA9-BAE9-82FF9B1D964D}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "EasySaveProSoft.WPF", "EasySaveProSoftWPF\EasySaveProSoft.WPF.csproj", "{08955CB4-8B19-44B2-8953-AF0524B5C071}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -14,6 +16,10 @@ Global
 		{46F9902E-67BF-4EA9-BAE9-82FF9B1D964D}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{46F9902E-67BF-4EA9-BAE9-82FF9B1D964D}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{46F9902E-67BF-4EA9-BAE9-82FF9B1D964D}.Release|Any CPU.Build.0 = Release|Any CPU
+		{08955CB4-8B19-44B2-8953-AF0524B5C071}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{08955CB4-8B19-44B2-8953-AF0524B5C071}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{08955CB4-8B19-44B2-8953-AF0524B5C071}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{08955CB4-8B19-44B2-8953-AF0524B5C071}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

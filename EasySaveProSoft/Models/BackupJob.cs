@@ -17,9 +17,11 @@ namespace EasySaveProSoft.Models
 
         private readonly Logger _logger = new Logger();
 
+        // 🔥 Event to update progress
+        public event Action<double> OnProgressUpdated;
+
         public void Execute()
         {
-            
             Console.WriteLine($"\n[+] Executing {Type} Backup for '{Name}'...");
             if (!Directory.Exists(SourcePath) || !Directory.Exists(TargetPath))
             {
@@ -37,14 +39,8 @@ namespace EasySaveProSoft.Models
                 totalSize += new FileInfo(file).Length;
             }
 
-            Console.WriteLine($"[+] Found {totalFiles} files to process ({FormatSize(totalSize)})...");
-
             Stopwatch globalTimer = Stopwatch.StartNew();
             int currentFile = 0;
-
-            // 👇 Save the current cursor position
-            int progressBarLine = Console.CursorTop;
-            Console.WriteLine(); // Create an empty line for the progress bar
 
             foreach (var file in files)
             {
@@ -75,9 +71,12 @@ namespace EasySaveProSoft.Models
 
                         _logger.LogFileTransfer(fileItem);
 
-                        // ✅ Real-time update in the same line
+                        // ✅ Real-time update for WPF
                         currentFile++;
-                        DisplayProgress(currentFile, totalFiles, transferredSize, totalSize, globalTimer.Elapsed, progressBarLine);
+                        double progress = (double)currentFile / totalFiles * 100;
+
+                        // 🔥 Trigger the event if there is a subscriber
+                        OnProgressUpdated?.Invoke(progress);
 
                     }
                     catch (Exception ex)
@@ -91,63 +90,23 @@ namespace EasySaveProSoft.Models
             globalTimer.Stop();
             LastBackupDate = DateTime.Now;
             Console.WriteLine($"\n[✓] Backup completed at {LastBackupDate = DateTime.Now}.");
-            
-            
         }
 
         private bool IsNewer(string sourceFile, string destinationFile)
         {
             if (!File.Exists(destinationFile))
                 return true;
-             
+
             DateTime sourceModified = File.GetLastWriteTime(sourceFile);
             DateTime targetModified = File.GetLastWriteTime(destinationFile);
 
             return sourceModified > targetModified;
         }
 
-        private void DisplayProgress(int current, int total, long transferred, long totalSize, TimeSpan elapsed, int progressBarLine)
-        {
-            // Calculate progress
-            double percent = (double)current / total * 100;
-
-            // Calculate estimated time remaining
-            double avgTimePerFile = elapsed.TotalSeconds / current;
-            double estimatedRemainingTime = avgTimePerFile * (total - current);
-
-            // Draw progress bar
-            int barWidth = 30;
-            int progressBlocks = (int)((percent / 100) * barWidth);
-
-            // Prepare the progress line
-            string progressLine = $"[{new string('=', progressBlocks)}{new string(' ', barWidth - progressBlocks)}] " +
-                                  $"{percent:F1}% | {FormatSize(transferred)}/{FormatSize(totalSize)} | ETA: {TimeSpan.FromSeconds(estimatedRemainingTime):mm\\:ss}";
-
-            // **Move cursor back up to the progress bar line**
-            Console.SetCursorPosition(0, progressBarLine);
-            Console.Write(progressLine.PadRight(Console.WindowWidth - 1));
-        }
-
-        private string FormatSize(long bytes)
-        {
-            string[] sizes = { "B", "KB", "MB", "GB", "TB" };
-            double len = bytes;
-            int order = 0;
-            while (len >= 1024 && order < sizes.Length - 1)
-            {
-                order++;
-                len /= 1024;
-            }
-            return $"{len:0.##} {sizes[order]}";
-        }
-
         // Validates both paths exist
         public bool IsValid()
         {
             return Directory.Exists(SourcePath) && Directory.Exists(TargetPath);
-        } 
-
+        }
     }
 }
-
-

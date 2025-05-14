@@ -21,11 +21,11 @@ namespace EasySaveProSoft.Models
         // Add a new backup job and save to JSON
         public void AddJob(BackupJob job)
         {
-            if (Jobs.Count >= MaxJobs)
-            {
-                Console.WriteLine("[!] Maximum number of backup jobs reached (5). Delete a job to add a new one.");
-                return;
-            }
+            //if (Jobs.Count >= MaxJobs)
+            //{
+            //    Console.WriteLine("[!] Maximum number of backup jobs reached (5). Delete a job to add a new one.");
+            //    return;
+            //}
 
             Jobs.Add(job);
             _jsonHandler.SaveJobs(Jobs);

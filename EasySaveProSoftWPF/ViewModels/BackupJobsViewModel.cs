@@ -1,8 +1,9 @@
 ﻿using EasySaveProSoft.Models;
-using EasySaveProSoft.ViewModels;
 using EasySaveProSoft.WPF.Views;
 using System.Collections.ObjectModel;
 using System.Windows.Input;
+using System.Windows;
+using EasySaveProSoft.ViewModels;
 
 namespace EasySaveProSoft.WPF.ViewModels
 {
@@ -27,14 +28,43 @@ namespace EasySaveProSoft.WPF.ViewModels
             DeleteBackupJobCommand = new RelayCommand(DeleteBackupJob, CanExecuteOrDelete);
         }
 
-        // 🔥 Opens the window to create a new job
         private void OpenCreateBackupJobView()
         {
             var createView = new CreateBackupJobView(this);
-            createView.ShowDialog(); // Modal dialog
+            createView.ShowDialog();
         }
 
-        // 🔥 Called from the popup window
+        private void ExecuteBackupJob()
+        {
+            if (SelectedBackupJob != null)
+            {
+                // 🔥 Subscribe to the event before running the job
+                SelectedBackupJob.OnProgressUpdated += UpdateProgress;
+
+                // Run the job
+                _backupManager.RunJob(SelectedBackupJob.Name);
+
+                // 🔥 Unsubscribe after completion
+                SelectedBackupJob.OnProgressUpdated -= UpdateProgress;
+
+                // Refresh the UI list
+                BackupJobs.Clear();
+                foreach (var job in _backupManager.Jobs)
+                {
+                    BackupJobs.Add(job);
+                }
+            }
+        }
+
+        // 🔥 Method to update progress in WPF
+        private void UpdateProgress(double progress)
+        {
+            System.Windows.Threading.Dispatcher.CurrentDispatcher.Invoke(() =>
+            {
+                MessageBox.Show($"Progress: {progress}%");
+            });
+        }
+
         public void CreateBackupJob(string name, string source, string target, BackupType type)
         {
             var newJob = new BackupJob
@@ -48,17 +78,6 @@ namespace EasySaveProSoft.WPF.ViewModels
             _backupManager.AddJob(newJob);
             BackupJobs.Add(newJob);
         }
-
-        // Execute the selected job
-        private void ExecuteBackupJob()
-        {
-            if (SelectedBackupJob != null)
-            {
-                _backupManager.RunJob(SelectedBackupJob.Name);
-            }
-        }
-
-        // Delete the selected job
         private void DeleteBackupJob()
         {
             if (SelectedBackupJob != null)
@@ -68,7 +87,6 @@ namespace EasySaveProSoft.WPF.ViewModels
             }
         }
 
-        // Validation for buttons
         private bool CanExecuteOrDelete()
         {
             return SelectedBackupJob != null;

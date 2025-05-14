@@ -6,6 +6,7 @@
         <Grid.RowDefinitions>
             <RowDefinition Height="*" />
             <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
         </Grid.RowDefinitions>
 
         <!-- List of Backup Jobs -->
@@ -14,8 +15,11 @@
                  DisplayMemberPath="Name" 
                  Margin="5" />
 
-        <!-- Action Buttons -->
-        <StackPanel Grid.Row="1" Orientation="Horizontal" HorizontalAlignment="Center" Margin="5">
+        <!-- Progress Bar -->
+        <ProgressBar x:Name="ExecutionProgressBar" Height="25" Grid.Row="1" Margin="5" />
+
+        <!-- Buttons -->
+        <StackPanel Grid.Row="2" Orientation="Horizontal" HorizontalAlignment="Center" Margin="5">
             <Button Content="Create Job" Width="100" Margin="5" Command="{Binding CreateBackupJobCommand}" />
             <Button Content="Execute Job" Width="100" Margin="5" Command="{Binding ExecuteBackupJobCommand}" />
             <Button Content="Delete Job" Width="100" Margin="5" Command="{Binding DeleteBackupJobCommand}" />
