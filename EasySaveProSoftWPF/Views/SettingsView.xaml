@@ -1,0 +1,8 @@
+﻿<UserControl x:Class="EasySaveProSoft.WPF.Views.SettingsView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             Background="White">
+    <Grid>
+        <TextBlock Text="Settings" FontSize="20" VerticalAlignment="Center" HorizontalAlignment="Center"/>
+    </Grid>
+</UserControl>
