@@ -12,11 +12,18 @@ namespace EasySaveProSoft.WPF.Views
     {
         private const string ConfigFile = "EncryptionExtensions.json";
         private List<string> _extensions = new List<string>();
+        private readonly LanguageService _languageService;
 
         public SettingsView()
         {
             InitializeComponent();
             LoadExtensions();
+
+            // Initialize LanguageService
+            _languageService = new LanguageService();
+
+            // Set the ComboBox value based on the current language
+            LanguageComboBox.SelectedIndex = _languageService.CurrentLanguage == "en" ? 0 : 1;
         }
 
         private void AddExtension_Click(object sender, RoutedEventArgs e)
@@ -58,13 +65,14 @@ namespace EasySaveProSoft.WPF.Views
             }
         }
 
-        //private void LanguageComboBox_SelectionChanged(object sender, SelectionChangedEventArgs e)
-        //{
-        //    if (LanguageComboBox.SelectedItem is ComboBoxItem selectedItem)
-        //    {
-        //        string langCode = selectedItem.Tag.ToString();
-        //        _languageService.SetLanguage(langCode);
-        //    }
-        //}
+        // ✅ NEW: Handle language change
+        private void LanguageComboBox_SelectionChanged(object sender, SelectionChangedEventArgs e)
+        {
+            if (LanguageComboBox.SelectedItem is ComboBoxItem selectedItem)
+            {
+                string langCode = selectedItem.Tag.ToString();
+                _languageService.SetLanguage(langCode);
+            }
+        }
     }
 }

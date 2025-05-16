@@ -8,8 +8,13 @@ namespace EasySaveProSoft.Services
     {
         // 🔥 Event to trigger when language changes
         public event PropertyChangedEventHandler PropertyChanged;
-
+        public string CurrentLanguage { get; private set; } = "en";
         // Stores the current language dictionary
+        //public static string MenuCreate => _currentDictionary?["menu_create"] ?? "Create Backup Job";
+        //public static string MenuRunOne => _currentDictionary?["menu_run_one"] ?? "Run One Backup Job";
+        //public static string MenuDelete => _currentDictionary?["menu_delete"] ?? "Delete Backup Job";
+        //public static string MenuExit => _currentDictionary?["menu_exit"] ?? "Exit";
+
         private Dictionary<string, string> _currentDictionary;
 
         // Stores all available translations
@@ -66,9 +71,12 @@ namespace EasySaveProSoft.Services
             if (_translations.ContainsKey(langCode))
             {
                 _currentDictionary = _translations[langCode];
+                CurrentLanguage = langCode;
                 OnPropertyChanged(null); // Notify all bindings
             }
         }
+
+
 
         // 🔎 **Get Translated Text**
         public string Translate(string key)

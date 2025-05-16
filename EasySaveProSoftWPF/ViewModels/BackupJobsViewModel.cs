@@ -1,95 +1,161 @@
 ﻿using EasySaveProSoft.Models;
-using EasySaveProSoft.WPF.Views;
 using System.Collections.ObjectModel;
 using System.Windows.Input;
+using System.Threading.Tasks;
+using System.ComponentModel;
+using System.Runtime.CompilerServices;
 using System.Windows;
-using EasySaveProSoft.ViewModels;
 
 namespace EasySaveProSoft.WPF.ViewModels
 {
-    public class BackupJobsViewModel
+    public class BackupJobsViewModel : INotifyPropertyChanged
     {
-        public ObservableCollection<BackupJob> BackupJobs { get; private set; }
-        public BackupJob SelectedBackupJob { get; set; }
+        public BackupType[] BackupTypes => (BackupType[])Enum.GetValues(typeof(BackupType));
 
+        public BackupManager Manager { get; private set; } = new BackupManager();
+        public ObservableCollection<BackupJob> BackupJobs { get; private set; }
+
+        private BackupJob _selectedBackupJob;
+        public BackupJob SelectedBackupJob
+        {
+            get => _selectedBackupJob;
+            set
+            {
+                _selectedBackupJob = value;
+                OnPropertyChanged();
+                // Raise CanExecuteChanged for commands depending on selection
+                ((RelayCommand)ExecuteBackupJobCommand).RaiseCanExecuteChanged();
+                ((RelayCommand)DeleteBackupJobCommand).RaiseCanExecuteChanged();
+            }
+        }
+
+        private double _progressValue;
+        public double ProgressValue
+        {
+            get => _progressValue;
+            set
+            {
+                _progressValue = value;
+                OnPropertyChanged();
+            }
+        }
+
+        // Properties for binding create job inputs (bind these in your Create Job form)
+        public string NewJobName { get; set; }
+        public string NewJobSource { get; set; }
+        public string NewJobTarget { get; set; }
+        public BackupType NewJobType { get; set; } = BackupType.Full;
+
+        // Commands
         public ICommand CreateBackupJobCommand { get; }
         public ICommand ExecuteBackupJobCommand { get; }
         public ICommand DeleteBackupJobCommand { get; }
-
-        private readonly BackupManager _backupManager;
+        public ICommand RunAllBackupsCommand { get; }
 
         public BackupJobsViewModel()
         {
-            _backupManager = new BackupManager();
-            BackupJobs = new ObservableCollection<BackupJob>(_backupManager.Jobs);
+            BackupJobs = new ObservableCollection<BackupJob>(Manager.Jobs);
 
-            CreateBackupJobCommand = new RelayCommand(OpenCreateBackupJobView);
-            ExecuteBackupJobCommand = new RelayCommand(ExecuteBackupJob, CanExecuteOrDelete);
-            DeleteBackupJobCommand = new RelayCommand(DeleteBackupJob, CanExecuteOrDelete);
+            CreateBackupJobCommand = new RelayCommand(_ => CreateBackupJob());
+            ExecuteBackupJobCommand = new RelayCommand(_ => ExecuteBackupJob(), _ => SelectedBackupJob != null);
+            DeleteBackupJobCommand = new RelayCommand(_ => DeleteBackupJob(), _ => SelectedBackupJob != null);
+            RunAllBackupsCommand = new RelayCommand(async _ => await RunAllBackups());
         }
 
-        private void OpenCreateBackupJobView()
+        // Create a job using bound properties
+        public void CreateBackupJob()
         {
-            var createView = new CreateBackupJobView(this);
-            createView.ShowDialog();
-        }
-
-        private void ExecuteBackupJob()
-        {
-            if (SelectedBackupJob != null)
+            if (string.IsNullOrWhiteSpace(NewJobName) || string.IsNullOrWhiteSpace(NewJobSource) || string.IsNullOrWhiteSpace(NewJobTarget))
             {
-                // 🔥 Subscribe to the event before running the job
-                SelectedBackupJob.OnProgressUpdated += UpdateProgress;
+                MessageBox.Show("Please fill in all fields to create a backup job.");
+                return;
+            }
 
-                // Run the job
-                _backupManager.RunJob(SelectedBackupJob.Name);
+            var job = new BackupJob
+            {
+                Name = NewJobName,
+                SourcePath = NewJobSource,
+                TargetPath = NewJobTarget,
+                Type = NewJobType
+            };
 
-                // 🔥 Unsubscribe after completion
-                SelectedBackupJob.OnProgressUpdated -= UpdateProgress;
-
-                // Refresh the UI list
-                BackupJobs.Clear();
-                foreach (var job in _backupManager.Jobs)
-                {
-                    BackupJobs.Add(job);
-                }
+            if (job.IsValid())
+            {
+                Manager.AddJob(job);
+                BackupJobs.Add(job);
+                MessageBox.Show($"Backup job '{NewJobName}' created!");
+                ClearNewJobFields();
+            }
+            else
+            {
+                MessageBox.Show("Invalid source or target paths.");
             }
         }
 
-        // 🔥 Method to update progress in WPF
-        private void UpdateProgress(double progress)
+        private void ClearNewJobFields()
         {
-            System.Windows.Threading.Dispatcher.CurrentDispatcher.Invoke(() =>
+            NewJobName = string.Empty;
+            NewJobSource = string.Empty;
+            NewJobTarget = string.Empty;
+            NewJobType = BackupType.Full;
+            OnPropertyChanged(nameof(NewJobName));
+            OnPropertyChanged(nameof(NewJobSource));
+            OnPropertyChanged(nameof(NewJobTarget));
+            OnPropertyChanged(nameof(NewJobType));
+        }
+
+        // Execute selected job
+        public void ExecuteBackupJob()
+        {
+            if (SelectedBackupJob == null)
+                return;
+
+            Task.Run(() =>
             {
-                MessageBox.Show($"Progress: {progress}%");
+                SelectedBackupJob.Execute();
+                MessageBox.Show($"Backup job '{SelectedBackupJob.Name}' executed.");
             });
         }
 
-        public void CreateBackupJob(string name, string source, string target, BackupType type)
+        // Delete selected job
+        public void DeleteBackupJob()
         {
-            var newJob = new BackupJob
-            {
-                Name = name,
-                SourcePath = source,
-                TargetPath = target,
-                Type = type
-            };
+            if (SelectedBackupJob == null)
+                return;
 
-            _backupManager.AddJob(newJob);
-            BackupJobs.Add(newJob);
+            var name = SelectedBackupJob.Name;
+            Manager.DeleteJob(name);
+            BackupJobs.Remove(SelectedBackupJob);
+            SelectedBackupJob = null;
+            MessageBox.Show($"Backup job '{name}' deleted.");
         }
-        private void DeleteBackupJob()
+
+        // Run all jobs with progress update
+        private async Task RunAllBackups()
         {
-            if (SelectedBackupJob != null)
+            ProgressValue = 0;
+
+            if (BackupJobs.Count == 0)
             {
-                _backupManager.DeleteJob(SelectedBackupJob.Name);
-                BackupJobs.Remove(SelectedBackupJob);
+                MessageBox.Show("No backup jobs found.");
+                return;
             }
+
+            double step = 100.0 / BackupJobs.Count;
+
+            foreach (var job in BackupJobs)
+            {
+                await Task.Run(() => job.Execute());
+                ProgressValue += step;
+            }
+
+            MessageBox.Show("All backups executed.");
         }
 
-        private bool CanExecuteOrDelete()
+        public event PropertyChangedEventHandler PropertyChanged;
+        protected void OnPropertyChanged([CallerMemberName] string propName = null)
         {
-            return SelectedBackupJob != null;
+            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propName));
         }
     }
 }
