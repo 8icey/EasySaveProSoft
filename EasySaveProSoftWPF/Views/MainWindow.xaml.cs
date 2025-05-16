@@ -10,6 +10,7 @@ namespace EasySaveProSoft.WPF.Views
         {
             InitializeComponent();
             MainContentFrame.Content = new BackupJobsView(); // Default page
+
         }
 
         private void NavigateToBackupJobs(object sender, RoutedEventArgs e)
