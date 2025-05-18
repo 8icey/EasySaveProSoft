@@ -9,22 +9,17 @@ namespace EasySaveProSoft.Models
 {
     public class BackupJob
     {
-        // Properties
         public string Name { get; set; }
         public string SourcePath { get; set; }
         public string TargetPath { get; set; }
         public BackupType Type { get; set; }
         public DateTime LastBackupDate { get; set; }
 
-        // Services
         private readonly Logger _logger = new Logger();
         private readonly CryptoService _cryptoService = new CryptoService();
-
-        // 🔥 Event for real-time progress in WPF
-        public event Action<double> OnProgressUpdated;
-
-        // Extensions to encrypt, now loaded from settings
         private List<string> _extensionsToEncrypt = new List<string>();
+        
+        public event Action<double, string, string> OnProgressUpdated;
 
         // ✅ New Constructor to load encryption extensions
         public BackupJob()
@@ -35,14 +30,9 @@ namespace EasySaveProSoft.Models
         // 🔄 **Main Execution Logic**
         public void Execute()
         {
-            Console.WriteLine($"\n[+] Executing {Type} Backup for '{Name}'...");
             if (!Directory.Exists(SourcePath) || !Directory.Exists(TargetPath))
-            {
-                Console.WriteLine("[!] Source or target path not found.");
                 return;
-            }
 
-            // 🔄 Get all files in the source directory
             var files = Directory.GetFiles(SourcePath, "*", SearchOption.AllDirectories);
             int totalFiles = files.Length;
             long totalSize = 0;
@@ -56,7 +46,6 @@ namespace EasySaveProSoft.Models
             Stopwatch globalTimer = Stopwatch.StartNew();
             int currentFile = 0;
 
-            // 🔥 Backup Logic (Full/Differential)
             foreach (var file in files)
             {
                 string relativePath = Path.GetRelativePath(SourcePath, file);
@@ -69,7 +58,6 @@ namespace EasySaveProSoft.Models
                     var timer = Stopwatch.StartNew();
                     try
                     {
-                        // ✅ Apply encryption if needed
                         if (ShouldEncrypt(file))
                         {
                             _cryptoService.EncryptFile(file, destinationFile);
@@ -81,26 +69,27 @@ namespace EasySaveProSoft.Models
 
                         timer.Stop();
 
-                        // ✅ Update progress
                         long fileSize = new FileInfo(file).Length;
                         transferredSize += fileSize;
 
                         currentFile++;
                         double progress = (double)currentFile / totalFiles * 100;
-                        OnProgressUpdated?.Invoke(progress);
+
+                        string sizeText = $"{FormatSize(transferredSize)} / {FormatSize(totalSize)}";
+                        string eta = TimeSpan.FromSeconds((globalTimer.Elapsed.TotalSeconds / currentFile) * (totalFiles - currentFile)).ToString(@"hh\:mm\:ss");
+
+                        OnProgressUpdated?.Invoke(progress, sizeText, eta);
 
                     }
                     catch (Exception ex)
                     {
                         Console.WriteLine($"[ERROR] Could not copy file: {file}");
-                        Console.WriteLine($"[ERROR] Reason: {ex.Message}");
                     }
                 }
             }
 
             globalTimer.Stop();
             LastBackupDate = DateTime.Now;
-            Console.WriteLine($"\n[✓] Backup completed at {LastBackupDate}.");
         }
 
         // ✅ **Check if the file should be encrypted**
@@ -147,6 +136,19 @@ namespace EasySaveProSoft.Models
         public bool IsValid()
         {
             return Directory.Exists(SourcePath) && Directory.Exists(TargetPath);
+        }
+
+        private string FormatSize(long bytes)
+        {
+            string[] sizes = { "B", "KB", "MB", "GB", "TB" };
+            double len = bytes;
+            int order = 0;
+            while (len >= 1024 && order < sizes.Length - 1)
+            {
+                order++;
+                len /= 1024;
+            }
+            return $"{len:0.##} {sizes[order]}";
         }
 
 

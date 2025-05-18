@@ -4,6 +4,7 @@ using System.IO;
 using System.Windows;
 using System.Windows.Controls;
 using EasySaveProSoft.Services;
+using EasySaveProSoft.WPF.Services;
 using Newtonsoft.Json;
 
 namespace EasySaveProSoft.WPF.Views
@@ -71,8 +72,9 @@ namespace EasySaveProSoft.WPF.Views
             if (LanguageComboBox.SelectedItem is ComboBoxItem selectedItem)
             {
                 string langCode = selectedItem.Tag.ToString();
-                _languageService.SetLanguage(langCode);
+                WpfLanguageService.Instance.SetLanguage(langCode);
             }
         }
+
     }
 }

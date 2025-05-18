@@ -112,8 +112,12 @@ namespace EasySaveProSoft.WPF.ViewModels
 
             Task.Run(() =>
             {
+                SelectedBackupJob.OnProgressUpdated += UpdateProgress;
                 SelectedBackupJob.Execute();
-                MessageBox.Show($"Backup job '{SelectedBackupJob.Name}' executed.");
+                Application.Current.Dispatcher.Invoke(() =>
+                {
+                    MessageBox.Show($"Backup job '{SelectedBackupJob.Name}' executed.");
+                });
             });
         }
 
@@ -157,5 +161,30 @@ namespace EasySaveProSoft.WPF.ViewModels
         {
             PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propName));
         }
+
+        private void UpdateProgress(double progress, string sizeText, string eta)
+        {
+            Application.Current.Dispatcher.Invoke(() =>
+            {
+                ProgressValue = progress;
+                FileSizeText = sizeText;
+                EstimatedTimeText = eta;
+            });
+        }
+
+        private string _fileSizeText;
+        public string FileSizeText
+        {
+            get => _fileSizeText;
+            set { _fileSizeText = value; OnPropertyChanged(); }
+        }
+
+        private string _estimatedTimeText;
+        public string EstimatedTimeText
+        {
+            get => _estimatedTimeText;
+            set { _estimatedTimeText = value; OnPropertyChanged(); }
+        }
     }
+
 }
