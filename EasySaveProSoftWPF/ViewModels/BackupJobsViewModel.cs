@@ -172,11 +172,43 @@ namespace EasySaveProSoft.WPF.ViewModels
             OnPropertyChanged(nameof(NewJobType));
         }
 
+        //public void ExecuteBackupJob()
+        //{
+
+
+
+
+        //    if (SelectedBackupJob == null)
+        //        return;
+
+        //    Task.Run(() =>
+        //    {
+        //        SelectedBackupJob.OnProgressUpdated += UpdateProgress;
+        //        SelectedBackupJob.Execute();
+
+        //        Application.Current.Dispatcher.Invoke(() =>
+        //        {
+        //            _logger.LogJobStatus(SelectedBackupJob, true); // 🔹 Log de statut "Executed"
+        //            MessageBox.Show($"Backup job '{SelectedBackupJob.Name}' executed.");
+        //        });
+        //    });
+        //}
+
         public void ExecuteBackupJob()
         {
             if (SelectedBackupJob == null)
                 return;
 
+            // ✅ DO THIS BEFORE THE TASK
+            if (SoftwareDetector.IsBlockedSoftwareRunning())
+            {
+                string running = SoftwareDetector.GetFirstBlockedProcess();
+                MessageBox.Show($"Execution blocked. Please close {running} to proceed.",
+                                "Blocked Software Running",
+                                MessageBoxButton.OK,
+                                MessageBoxImage.Warning);
+                return;
+            }
             Task.Run(() =>
             {
                 SelectedBackupJob.OnProgressUpdated += UpdateProgress;
@@ -184,11 +216,14 @@ namespace EasySaveProSoft.WPF.ViewModels
 
                 Application.Current.Dispatcher.Invoke(() =>
                 {
-                    _logger.LogJobStatus(SelectedBackupJob, true); // 🔹 Log de statut "Executed"
+                    _logger.LogJobStatus(SelectedBackupJob, true);
                     MessageBox.Show($"Backup job '{SelectedBackupJob.Name}' executed.");
                 });
             });
         }
+
+
+
 
         public void DeleteBackupJob()
         {
