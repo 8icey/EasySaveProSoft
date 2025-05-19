@@ -18,6 +18,9 @@ namespace EasySaveProSoft.WPF.Services
         // The current dictionary of translations
         private Dictionary<string, string> _currentDictionary;
 
+
+        //رلاىرك
+
         // Available translations
         private readonly Dictionary<string, Dictionary<string, string>> _translations = new Dictionary<string, Dictionary<string, string>>()
         {
