@@ -23,8 +23,18 @@ namespace EasySaveProSoft.WPF.Views
             // Initialize LanguageService
             _languageService = new LanguageService();
 
-            // Set the ComboBox value based on the current language
             LanguageComboBox.SelectedIndex = _languageService.CurrentLanguage == "en" ? 0 : 1;
+
+            // ✅ Set current log format in ComboBox
+            string currentFormat = LoadCurrentFormat();
+            foreach (ComboBoxItem item in LogFormatComboBox.Items)
+            {
+                if (item.Tag.ToString() == currentFormat)
+                {
+                    LogFormatComboBox.SelectedItem = item;
+                    break;
+                }
+            }
         }
 
         private void AddExtension_Click(object sender, RoutedEventArgs e)
@@ -66,15 +76,44 @@ namespace EasySaveProSoft.WPF.Views
             }
         }
 
-        // ✅ NEW: Handle language change
         private void LanguageComboBox_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
             if (LanguageComboBox.SelectedItem is ComboBoxItem selectedItem)
             {
                 string langCode = selectedItem.Tag.ToString();
                 WpfLanguageService.Instance.SetLanguage(langCode);
+
+                // ✅ Save language to config.ini
+                AppConfig.Set("Language", langCode);
+                AppConfig.Save();
             }
         }
 
+        // ✅ Apply selected format using Logger and save to config.ini
+        private void ApplyLogFormat_Click(object sender, RoutedEventArgs e)
+        {
+            if (LogFormatComboBox.SelectedItem is ComboBoxItem selectedItem)
+            {
+                string format = selectedItem.Tag.ToString();
+                var logger = new Logger();
+                logger.SetLogFormat(format);
+
+                // ✅ Save format to config.ini
+                AppConfig.Set("LogFormat", format);
+                AppConfig.Save();
+
+                MessageBox.Show($"Log format set to: {format.ToUpper()}");
+            }
+        }
+
+        private string LoadCurrentFormat()
+        {
+            const string path = "logformat.txt";
+            if (!File.Exists(path))
+                return "json";
+
+            string format = File.ReadAllText(path).Trim().ToLower();
+            return (format == "json" || format == "xml") ? format : "json";
+        }
     }
 }

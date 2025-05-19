@@ -10,5 +10,7 @@ namespace EasySaveProSoft.WPF.Views
             InitializeComponent();
             DataContext = new BackupJobsViewModel(); // 🔥 This binds the ViewModel to the View
         }
+
+        
     }
 }

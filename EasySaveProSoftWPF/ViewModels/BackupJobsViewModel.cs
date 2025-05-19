@@ -5,6 +5,9 @@ using System.Threading.Tasks;
 using System.ComponentModel;
 using System.Runtime.CompilerServices;
 using System.Windows;
+using Microsoft.Win32;
+using System.IO;
+using EasySaveProSoft.Services;
 
 namespace EasySaveProSoft.WPF.ViewModels
 {
@@ -15,6 +18,8 @@ namespace EasySaveProSoft.WPF.ViewModels
         public BackupManager Manager { get; private set; } = new BackupManager();
         public ObservableCollection<BackupJob> BackupJobs { get; private set; }
 
+        private Logger _logger = new Logger();
+
         private BackupJob _selectedBackupJob;
         public BackupJob SelectedBackupJob
         {
@@ -23,7 +28,6 @@ namespace EasySaveProSoft.WPF.ViewModels
             {
                 _selectedBackupJob = value;
                 OnPropertyChanged();
-                // Raise CanExecuteChanged for commands depending on selection
                 ((RelayCommand)ExecuteBackupJobCommand).RaiseCanExecuteChanged();
                 ((RelayCommand)DeleteBackupJobCommand).RaiseCanExecuteChanged();
             }
@@ -33,24 +37,84 @@ namespace EasySaveProSoft.WPF.ViewModels
         public double ProgressValue
         {
             get => _progressValue;
+            set { _progressValue = value; OnPropertyChanged(); }
+        }
+
+        private string _fileSizeText;
+        public string FileSizeText
+        {
+            get => _fileSizeText;
+            set { _fileSizeText = value; OnPropertyChanged(); }
+        }
+
+        private string _estimatedTimeText;
+        public string EstimatedTimeText
+        {
+            get => _estimatedTimeText;
+            set { _estimatedTimeText = value; OnPropertyChanged(); }
+        }
+
+        // Champs de validation
+        private bool _isSourceValid;
+        public bool IsSourceValid
+        {
+            get => _isSourceValid;
+            set { _isSourceValid = value; OnPropertyChanged(); }
+        }
+
+        private bool _isDestinationValid;
+        public bool IsDestinationValid
+        {
+            get => _isDestinationValid;
+            set { _isDestinationValid = value; OnPropertyChanged(); }
+        }
+
+        // Champs de création
+        private string _newJobName;
+        public string NewJobName
+        {
+            get => _newJobName;
+            set { _newJobName = value; OnPropertyChanged(); }
+        }
+
+        private string _newJobSource;
+        public string NewJobSource
+        {
+            get => _newJobSource;
             set
             {
-                _progressValue = value;
+                _newJobSource = value;
                 OnPropertyChanged();
+                IsSourceValid = Directory.Exists(value);
             }
         }
 
-        // Properties for binding create job inputs (bind these in your Create Job form)
-        public string NewJobName { get; set; }
-        public string NewJobSource { get; set; }
-        public string NewJobTarget { get; set; }
-        public BackupType NewJobType { get; set; } = BackupType.Full;
+        private string _newJobTarget;
+        public string NewJobTarget
+        {
+            get => _newJobTarget;
+            set
+            {
+                _newJobTarget = value;
+                OnPropertyChanged();
+                IsDestinationValid = Directory.Exists(value);
+            }
+        }
 
-        // Commands
+        private BackupType _newJobType = BackupType.Full;
+        public BackupType NewJobType
+        {
+            get => _newJobType;
+            set { _newJobType = value; OnPropertyChanged(); }
+        }
+
+        // Commandes
         public ICommand CreateBackupJobCommand { get; }
         public ICommand ExecuteBackupJobCommand { get; }
         public ICommand DeleteBackupJobCommand { get; }
         public ICommand RunAllBackupsCommand { get; }
+        public ICommand BrowseSourceCommand { get; }
+        public ICommand BrowseDestinationCommand { get; }
 
         public BackupJobsViewModel()
         {
@@ -60,9 +124,11 @@ namespace EasySaveProSoft.WPF.ViewModels
             ExecuteBackupJobCommand = new RelayCommand(_ => ExecuteBackupJob(), _ => SelectedBackupJob != null);
             DeleteBackupJobCommand = new RelayCommand(_ => DeleteBackupJob(), _ => SelectedBackupJob != null);
             RunAllBackupsCommand = new RelayCommand(async _ => await RunAllBackups());
+
+            BrowseSourceCommand = new RelayCommand(_ => BrowseSource());
+            BrowseDestinationCommand = new RelayCommand(_ => BrowseDestination());
         }
 
-        // Create a job using bound properties
         public void CreateBackupJob()
         {
             if (string.IsNullOrWhiteSpace(NewJobName) || string.IsNullOrWhiteSpace(NewJobSource) || string.IsNullOrWhiteSpace(NewJobTarget))
@@ -83,6 +149,7 @@ namespace EasySaveProSoft.WPF.ViewModels
             {
                 Manager.AddJob(job);
                 BackupJobs.Add(job);
+                _logger.LogJobStatus(job, false); // 🔹 Log de statut "Not Executed"
                 MessageBox.Show($"Backup job '{NewJobName}' created!");
                 ClearNewJobFields();
             }
@@ -98,13 +165,13 @@ namespace EasySaveProSoft.WPF.ViewModels
             NewJobSource = string.Empty;
             NewJobTarget = string.Empty;
             NewJobType = BackupType.Full;
+
             OnPropertyChanged(nameof(NewJobName));
             OnPropertyChanged(nameof(NewJobSource));
             OnPropertyChanged(nameof(NewJobTarget));
             OnPropertyChanged(nameof(NewJobType));
         }
 
-        // Execute selected job
         public void ExecuteBackupJob()
         {
             if (SelectedBackupJob == null)
@@ -114,14 +181,15 @@ namespace EasySaveProSoft.WPF.ViewModels
             {
                 SelectedBackupJob.OnProgressUpdated += UpdateProgress;
                 SelectedBackupJob.Execute();
+
                 Application.Current.Dispatcher.Invoke(() =>
                 {
+                    _logger.LogJobStatus(SelectedBackupJob, true); // 🔹 Log de statut "Executed"
                     MessageBox.Show($"Backup job '{SelectedBackupJob.Name}' executed.");
                 });
             });
         }
 
-        // Delete selected job
         public void DeleteBackupJob()
         {
             if (SelectedBackupJob == null)
@@ -134,7 +202,6 @@ namespace EasySaveProSoft.WPF.ViewModels
             MessageBox.Show($"Backup job '{name}' deleted.");
         }
 
-        // Run all jobs with progress update
         private async Task RunAllBackups()
         {
             ProgressValue = 0;
@@ -150,16 +217,47 @@ namespace EasySaveProSoft.WPF.ViewModels
             foreach (var job in BackupJobs)
             {
                 await Task.Run(() => job.Execute());
+                _logger.LogJobStatus(job, true); // 🔹 Log après chaque exécution
                 ProgressValue += step;
             }
 
             MessageBox.Show("All backups executed.");
         }
 
-        public event PropertyChangedEventHandler PropertyChanged;
-        protected void OnPropertyChanged([CallerMemberName] string propName = null)
+        private void BrowseSource()
         {
-            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propName));
+            var dialog = new OpenFileDialog
+            {
+                CheckFileExists = false,
+                FileName = "Select Folder"
+            };
+
+            if (dialog.ShowDialog() == true)
+            {
+                var path = Path.GetDirectoryName(dialog.FileName);
+                if (Directory.Exists(path))
+                {
+                    NewJobSource = path;
+                }
+            }
+        }
+
+        private void BrowseDestination()
+        {
+            var dialog = new OpenFileDialog
+            {
+                CheckFileExists = false,
+                FileName = "Select Folder"
+            };
+
+            if (dialog.ShowDialog() == true)
+            {
+                var path = Path.GetDirectoryName(dialog.FileName);
+                if (Directory.Exists(path))
+                {
+                    NewJobTarget = path;
+                }
+            }
         }
 
         private void UpdateProgress(double progress, string sizeText, string eta)
@@ -172,19 +270,10 @@ namespace EasySaveProSoft.WPF.ViewModels
             });
         }
 
-        private string _fileSizeText;
-        public string FileSizeText
+        public event PropertyChangedEventHandler PropertyChanged;
+        protected void OnPropertyChanged([CallerMemberName] string propName = null)
         {
-            get => _fileSizeText;
-            set { _fileSizeText = value; OnPropertyChanged(); }
-        }
-
-        private string _estimatedTimeText;
-        public string EstimatedTimeText
-        {
-            get => _estimatedTimeText;
-            set { _estimatedTimeText = value; OnPropertyChanged(); }
+            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propName));
         }
     }
-
 }

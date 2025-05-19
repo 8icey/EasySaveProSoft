@@ -16,6 +16,9 @@ namespace EasySaveProSoft.Models
         // The destination path of the file after being copied
         public string DestinationPath { get; set; }
 
+        public double EncryptionTimeMs { get; set; } = 0; // default: no encryption
+
+
         // The size of the file in bytes
         public long Size { get; set; }
 

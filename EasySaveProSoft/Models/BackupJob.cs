@@ -18,16 +18,14 @@ namespace EasySaveProSoft.Models
         private readonly Logger _logger = new Logger();
         private readonly CryptoService _cryptoService = new CryptoService();
         private List<string> _extensionsToEncrypt = new List<string>();
-        
+
         public event Action<double, string, string> OnProgressUpdated;
 
-        // ✅ New Constructor to load encryption extensions
         public BackupJob()
         {
             LoadEncryptedExtensions();
         }
 
-        // 🔄 **Main Execution Logic**
         public void Execute()
         {
             if (!Directory.Exists(SourcePath) || !Directory.Exists(TargetPath))
@@ -56,21 +54,35 @@ namespace EasySaveProSoft.Models
                 if (Type == BackupType.Full || (Type == BackupType.Differential && IsNewer(file, destinationFile)))
                 {
                     var timer = Stopwatch.StartNew();
+                    double encryptionTimeMs = 0;
+                    bool success = true;
+
                     try
                     {
                         if (ShouldEncrypt(file))
                         {
-                            _cryptoService.EncryptFile(file, destinationFile);
+                            success = _cryptoService.EncryptFile(file, destinationFile, out encryptionTimeMs);
                         }
                         else
                         {
                             File.Copy(file, destinationFile, true);
+                            encryptionTimeMs = 0;
                         }
 
                         timer.Stop();
 
                         long fileSize = new FileInfo(file).Length;
                         transferredSize += fileSize;
+
+                        _logger.LogFileTransfer(new FileItem
+                        {
+                            SourcePath = file,
+                            DestinationPath = destinationFile,
+                            Size = fileSize,
+                            TransferTime = timer.Elapsed,
+                            IsSuccess = success,
+                            EncryptionTimeMs = encryptionTimeMs
+                        });
 
                         currentFile++;
                         double progress = (double)currentFile / totalFiles * 100;
@@ -79,7 +91,6 @@ namespace EasySaveProSoft.Models
                         string eta = TimeSpan.FromSeconds((globalTimer.Elapsed.TotalSeconds / currentFile) * (totalFiles - currentFile)).ToString(@"hh\:mm\:ss");
 
                         OnProgressUpdated?.Invoke(progress, sizeText, eta);
-
                     }
                     catch (Exception ex)
                     {
@@ -92,14 +103,12 @@ namespace EasySaveProSoft.Models
             LastBackupDate = DateTime.Now;
         }
 
-        // ✅ **Check if the file should be encrypted**
         private bool ShouldEncrypt(string filePath)
         {
             string extension = Path.GetExtension(filePath).ToLower();
             return _extensionsToEncrypt.Contains(extension);
         }
 
-        // ✅ **Load the extensions from config**
         private void LoadEncryptedExtensions()
         {
             try
@@ -122,7 +131,6 @@ namespace EasySaveProSoft.Models
             }
         }
 
-        // ✅ **Check if the file is newer for Differential Backup**
         private bool IsNewer(string sourceFile, string destinationFile)
         {
             if (!File.Exists(destinationFile))
@@ -133,6 +141,7 @@ namespace EasySaveProSoft.Models
 
             return sourceModified > targetModified;
         }
+
         public bool IsValid()
         {
             return Directory.Exists(SourcePath) && Directory.Exists(TargetPath);
@@ -150,9 +159,5 @@ namespace EasySaveProSoft.Models
             }
             return $"{len:0.##} {sizes[order]}";
         }
-
-
     }
-
-
 }

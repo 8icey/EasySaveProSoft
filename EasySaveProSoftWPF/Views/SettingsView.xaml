@@ -10,19 +10,29 @@
 
         <StackPanel Orientation="Horizontal" Margin="5">
             <TextBlock Text="ExtensionTextBox:" FontWeight="Bold" Margin="5"/>
-            <TextBox x:Name="ExtensionTextBox" Margin="5" Grid.Row="11" Width="67" />
-
+            <TextBox x:Name="ExtensionTextBox" Margin="5" Width="67" />
             <Button Content="Add" Width="100" Margin="5" Click="AddExtension_Click"/>
             <Button Content="Remove" Width="100" Margin="5" Click="RemoveExtension_Click"/>
         </StackPanel>
 
         <Button Content="Save Extensions" Width="150" Margin="5" Click="SaveExtensions_Click"/>
 
-        <!-- 🔄 New Language Switcher -->
+        <!-- 🔄 Language Switcher -->
         <TextBlock Text="Language:" FontSize="16" Margin="15 5 5 5"/>
         <ComboBox x:Name="LanguageComboBox" SelectionChanged="LanguageComboBox_SelectionChanged" Margin="5">
             <ComboBoxItem Content="English" Tag="en"/>
             <ComboBoxItem Content="Français" Tag="fr"/>
         </ComboBox>
+
+        <!-- ✅ Log Format Switcher -->
+        <TextBlock Text="Log Format:" FontSize="16" Margin="15 10 5 5"/>
+        <StackPanel Orientation="Horizontal" Margin="5">
+            <ComboBox x:Name="LogFormatComboBox" Width="100" Margin="5">
+                <ComboBoxItem Content="JSON" Tag="json"/>
+                <ComboBoxItem Content="XML" Tag="xml"/>
+            </ComboBox>
+            <Button Content="Apply Format" Width="120" Margin="5" Click="ApplyLogFormat_Click"/>
+        </StackPanel>
+
     </StackPanel>
 </UserControl>
