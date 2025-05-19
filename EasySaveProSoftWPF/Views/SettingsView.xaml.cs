@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Windows;
 using System.Windows.Controls;
+using Microsoft.Win32;
 using EasySaveProSoft.Services;
 using EasySaveProSoft.WPF.Services;
 using Newtonsoft.Json;
@@ -12,20 +13,20 @@ namespace EasySaveProSoft.WPF.Views
     public partial class SettingsView : UserControl
     {
         private const string ConfigFile = "EncryptionExtensions.json";
-        private List<string> _extensions = new List<string>();
+        private const string BlockedSoftwareFile = "BlockedProcesses.json";
+        private List<string> _extensions = new();
+        private List<string> _blockedSoftware = new();
         private readonly LanguageService _languageService;
 
         public SettingsView()
         {
             InitializeComponent();
             LoadExtensions();
+            LoadBlockedSoftware();
 
-            // Initialize LanguageService
             _languageService = new LanguageService();
-
             LanguageComboBox.SelectedIndex = _languageService.CurrentLanguage == "en" ? 0 : 1;
 
-            // ✅ Set current log format in ComboBox
             string currentFormat = LoadCurrentFormat();
             foreach (ComboBoxItem item in LogFormatComboBox.Items)
             {
@@ -37,6 +38,7 @@ namespace EasySaveProSoft.WPF.Views
             }
         }
 
+        // 🔹 Extension logic
         private void AddExtension_Click(object sender, RoutedEventArgs e)
         {
             string extension = ExtensionTextBox.Text.Trim();
@@ -76,32 +78,27 @@ namespace EasySaveProSoft.WPF.Views
             }
         }
 
+        // 🔹 Language
         private void LanguageComboBox_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
             if (LanguageComboBox.SelectedItem is ComboBoxItem selectedItem)
             {
                 string langCode = selectedItem.Tag.ToString();
                 WpfLanguageService.Instance.SetLanguage(langCode);
-
-                // ✅ Save language to config.ini
                 AppConfig.Set("Language", langCode);
                 AppConfig.Save();
             }
         }
 
-        // ✅ Apply selected format using Logger and save to config.ini
+        // 🔹 Log Format
         private void ApplyLogFormat_Click(object sender, RoutedEventArgs e)
         {
             if (LogFormatComboBox.SelectedItem is ComboBoxItem selectedItem)
             {
                 string format = selectedItem.Tag.ToString();
-                var logger = new Logger();
-                logger.SetLogFormat(format);
-
-                // ✅ Save format to config.ini
+                new Logger().SetLogFormat(format);
                 AppConfig.Set("LogFormat", format);
                 AppConfig.Save();
-
                 MessageBox.Show($"Log format set to: {format.ToUpper()}");
             }
         }
@@ -109,11 +106,59 @@ namespace EasySaveProSoft.WPF.Views
         private string LoadCurrentFormat()
         {
             const string path = "logformat.txt";
-            if (!File.Exists(path))
-                return "json";
-
+            if (!File.Exists(path)) return "json";
             string format = File.ReadAllText(path).Trim().ToLower();
             return (format == "json" || format == "xml") ? format : "json";
+        }
+
+        // 🔹 Blocked Software Logic
+        private void LoadBlockedSoftware()
+        {
+            if (File.Exists(BlockedSoftwareFile))
+            {
+                _blockedSoftware = JsonConvert.DeserializeObject<List<string>>(File.ReadAllText(BlockedSoftwareFile));
+                foreach (var exe in _blockedSoftware)
+                    BlockedSoftwareListBox.Items.Add(exe);
+            }
+        }
+
+        private void SaveBlockedSoftware_Click(object sender, RoutedEventArgs e)
+        {
+            File.WriteAllText(BlockedSoftwareFile, JsonConvert.SerializeObject(_blockedSoftware));
+            MessageBox.Show("Blocked software list saved!");
+        }
+
+        private void AddBlockedSoftware_Click(object sender, RoutedEventArgs e)
+        {
+            string exe = BlockedSoftwareTextBox.Text.Trim().ToLower();
+            if (!string.IsNullOrWhiteSpace(exe) && !_blockedSoftware.Contains(exe))
+            {
+                _blockedSoftware.Add(exe);
+                BlockedSoftwareListBox.Items.Add(exe);
+                BlockedSoftwareTextBox.Clear();
+            }
+        }
+
+        private void RemoveBlockedSoftware_Click(object sender, RoutedEventArgs e)
+        {
+            if (BlockedSoftwareListBox.SelectedItem is string selected)
+            {
+                _blockedSoftware.Remove(selected);
+                BlockedSoftwareListBox.Items.Remove(selected);
+            }
+        }
+
+        private void BrowseBlockedSoftware_Click(object sender, RoutedEventArgs e)
+        {
+            var dialog = new OpenFileDialog
+            {
+                Filter = "Executable Files (*.exe)|*.exe"
+            };
+            if (dialog.ShowDialog() == true)
+            {
+                string processName = Path.GetFileName(dialog.FileName).ToLower();
+                BlockedSoftwareTextBox.Text = processName;
+            }
         }
     }
 }

@@ -1,7 +1,9 @@
 ﻿using System;
 using System.Diagnostics;
 using System.IO;
+using System.Windows;
 using EasySaveProSoft.Services;
+//using EasySaveProSoft.WPF.Services;
 using System.Collections.Generic;
 using Newtonsoft.Json;
 
@@ -18,7 +20,7 @@ namespace EasySaveProSoft.Models
         private readonly Logger _logger = new Logger();
         private readonly CryptoService _cryptoService = new CryptoService();
         private List<string> _extensionsToEncrypt = new List<string>();
-
+        //private SoftwareDetector = new SoftwareDetector();
         public event Action<double, string, string> OnProgressUpdated;
 
         public BackupJob()
@@ -26,10 +28,21 @@ namespace EasySaveProSoft.Models
             LoadEncryptedExtensions();
         }
 
-        public void Execute()
+        public bool Execute()
         {
+            // ✅ Check for blocked software
+
+            if (SoftwareDetector.IsBlockedSoftwareRunning())
+            {
+                string blocked = SoftwareDetector.GetFirstBlockedProcess();
+                Console.WriteLine($"[BLOCKED] Cannot execute while '{blocked}' is running.");
+                return false;
+            }
+
+
+
             if (!Directory.Exists(SourcePath) || !Directory.Exists(TargetPath))
-                return;
+                return true;
 
             var files = Directory.GetFiles(SourcePath, "*", SearchOption.AllDirectories);
             int totalFiles = files.Length;
@@ -101,6 +114,7 @@ namespace EasySaveProSoft.Models
 
             globalTimer.Stop();
             LastBackupDate = DateTime.Now;
+            return true;
         }
 
         private bool ShouldEncrypt(string filePath)
