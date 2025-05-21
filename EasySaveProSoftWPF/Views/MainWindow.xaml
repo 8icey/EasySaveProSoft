@@ -1,13 +1,19 @@
 ﻿<Window x:Class="EasySaveProSoft.WPF.Views.MainWindow"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:vm="clr-namespace:EasySaveProSoft.WPF.ViewModels"
         Title="EasySave 2.0" Height="600" Width="1000">
+
+    <Window.DataContext>
+        <vm:LocalizationViewModel x:Name="Loc" />
+    </Window.DataContext>
+
     <Grid>
         <DockPanel>
             <!-- Sidebar Navigation -->
             <StackPanel DockPanel.Dock="Left" Width="150" Background="#2D2D30">
-                <Button Content="Backup Jobs" Click="NavigateToBackupJobs" Margin="5"/>
-                <Button Content="Settings" Click="NavigateToSettings" Margin="5"/>
+                <Button Content="{Binding MenuBackupJobs}" Click="NavigateToBackupJobs" Margin="5"/>
+                <Button Content="{Binding MenuSettings}" Click="NavigateToSettings" Margin="5"/>
 
             </StackPanel>
 

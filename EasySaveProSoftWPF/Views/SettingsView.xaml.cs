@@ -7,17 +7,23 @@ using Microsoft.Win32;
 using EasySaveProSoft.Services;
 using EasySaveProSoft.WPF.Services;
 using Newtonsoft.Json;
+using EasySaveProSoft.WPF.ViewModels;
 
 namespace EasySaveProSoft.WPF.Views
 {
     public partial class SettingsView : UserControl
     {
+        public LocalizationViewModel Loc { get; set; } = new LocalizationViewModel();
+
         private const string ConfigFile = "EncryptionExtensions.json";
         private const string BlockedSoftwareFile = "BlockedProcesses.json";
         private List<string> _extensions = new();
         private List<string> _blockedSoftware = new();
         private readonly LanguageService _languageService;
-
+        //private void ChangetoFr()
+        //{
+        //    MainContentFrame.Content = new SettingsView();
+        //}
         public SettingsView()
         {
             InitializeComponent();
@@ -25,7 +31,7 @@ namespace EasySaveProSoft.WPF.Views
             LoadBlockedSoftware();
 
             _languageService = new LanguageService();
-            LanguageComboBox.SelectedIndex = _languageService.CurrentLanguage == "en" ? 0 : 1;
+            //LanguageComboBox.SelectedIndex = _languageService.CurrentLanguage == "en" ? 0 : 1;
 
             string currentFormat = LoadCurrentFormat();
             foreach (ComboBoxItem item in LogFormatComboBox.Items)
@@ -37,6 +43,8 @@ namespace EasySaveProSoft.WPF.Views
                 }
             }
         }
+
+        
 
         // 🔹 Extension logic
         private void AddExtension_Click(object sender, RoutedEventArgs e)
@@ -63,7 +71,7 @@ namespace EasySaveProSoft.WPF.Views
         private void SaveExtensions_Click(object sender, RoutedEventArgs e)
         {
             File.WriteAllText(ConfigFile, JsonConvert.SerializeObject(_extensions));
-            MessageBox.Show("Extensions saved successfully!");
+            MessageBox.Show(WpfLanguageService.Instance.Translate("msg_extensions_saved"));
         }
 
         private void LoadExtensions()
@@ -99,7 +107,9 @@ namespace EasySaveProSoft.WPF.Views
                 new Logger().SetLogFormat(format);
                 AppConfig.Set("LogFormat", format);
                 AppConfig.Save();
-                MessageBox.Show($"Log format set to: {format.ToUpper()}");
+                MessageBox.Show(
+    string.Format(WpfLanguageService.Instance.Translate("msg_log_format_set"), format.ToUpper())
+);
             }
         }
 
@@ -125,7 +135,8 @@ namespace EasySaveProSoft.WPF.Views
         private void SaveBlockedSoftware_Click(object sender, RoutedEventArgs e)
         {
             File.WriteAllText(BlockedSoftwareFile, JsonConvert.SerializeObject(_blockedSoftware));
-            MessageBox.Show("Blocked software list saved!");
+            MessageBox.Show(WpfLanguageService.Instance.Translate("msg_blocked_saved"));
+
         }
 
         private void AddBlockedSoftware_Click(object sender, RoutedEventArgs e)
@@ -160,5 +171,8 @@ namespace EasySaveProSoft.WPF.Views
                 BlockedSoftwareTextBox.Text = processName;
             }
         }
+
+
+       
     }
 }

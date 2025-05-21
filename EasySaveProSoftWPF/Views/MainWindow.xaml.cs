@@ -1,11 +1,14 @@
 ﻿using System.Windows;
 using System.Windows.Controls;
+using EasySaveProSoft.WPF.ViewModels;
 using EasySaveProSoft.WPF.Views;
 
 namespace EasySaveProSoft.WPF.Views
 {
     public partial class MainWindow : Window
     {
+        //public LocalizationViewModel Loc { get; set; } = new LocalizationViewModel();
+
         public MainWindow()
         {
             InitializeComponent();

@@ -42,6 +42,22 @@ namespace EasySaveProSoft.WPF.Services
                     {"btn_execute_job", "Execute Job"},
                     {"btn_execute_all", "Execute All"},
                     {"btn_delete_job", "Delete Job"},
+                    {"lbl_blocked", "Blocked Software Packages:"},
+                    {"btn_save_blocked", "Save Blocked Software's"},
+                    { "msg_fill_fields", "Please fill in all fields to create a backup job." },
+                    { "msg_job_created", "Backup job '{0}' created!" },
+                    { "msg_invalid_paths", "Invalid source or target paths." },
+                    { "msg_blocked_software", "Execution blocked. Please close {0} to proceed." },
+                    { "msg_job_executed", "Backup job '{0}' executed." },
+                    { "msg_all_executed", "All backups executed." },
+                    { "msg_no_jobs", "No backup jobs found." },
+                    { "msg_job_deleted", "Backup job '{0}' deleted." },
+                    { "msg_extensions_saved", "Extensions saved successfully!" },
+{ "msg_log_format_set", "Log format set to: {0}" },
+{ "msg_blocked_saved", "Blocked software list saved!" },
+                    { "btn_apply_format", "Apply Format" }
+
+
                 }
             },
             {
@@ -62,6 +78,23 @@ namespace EasySaveProSoft.WPF.Services
                     {"btn_execute_job", "Exécuter le Travail"},
                     {"btn_execute_all", "Exécuter Tout"},
                     {"btn_delete_job", "Supprimer le Travail"},
+                    {"lbl_blocked", "Packages logiciels bloqués :"},
+                     {"btn_save_blocked", "Enregistrer les logiciels bloqués"},
+                     { "msg_fill_fields", "Veuillez remplir tous les champs pour créer un travail de sauvegarde." },
+                    { "msg_job_created", "Travail de sauvegarde '{0}' créé !" },
+                      { "msg_invalid_paths", "Chemins source ou cible invalides." },
+                    { "msg_blocked_software", "Exécution bloquée. Veuillez fermer {0} pour continuer." },
+                     { "msg_job_executed", "Travail de sauvegarde '{0}' exécuté." },
+                       { "msg_all_executed", "Tous les travaux de sauvegarde ont été exécutés." },
+                    { "msg_no_jobs", "Aucun travail de sauvegarde trouvé." },
+                    { "msg_job_deleted", "Travail de sauvegarde '{0}' supprimé." },
+                    { "msg_extensions_saved", "Extensions enregistrées avec succès !" },
+{ "msg_log_format_set", "Format de journal défini sur : {0}" },
+{ "msg_blocked_saved", "Liste des logiciels bloqués enregistrée !" },
+ { "btn_apply_format", "Appliquer le format" }
+
+
+
                 }
             }
         };
