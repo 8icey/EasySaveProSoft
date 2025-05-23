@@ -3,24 +3,29 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              Background="White">
 
+    <UserControl.DataContext>
+        <Binding RelativeSource="{RelativeSource Self}" Path="Loc"/>
+    </UserControl.DataContext>
+
+
     <ScrollViewer VerticalScrollBarVisibility="Auto">
         <StackPanel Margin="20">
 
-            <TextBlock Text="Manage Encrypted Extensions:" FontSize="16" Margin="5"/>
+            <TextBlock Text="{Binding LblManageExtensions}" FontSize="16" Margin="5"/>
             <ListBox x:Name="ExtensionsListBox" Height="150" Margin="5"/>
             <StackPanel Orientation="Horizontal" Margin="5">
                 <TextBlock Text="ExtensionTextBox:" FontWeight="Bold" Margin="5"/>
                 <TextBox x:Name="ExtensionTextBox" Margin="5" Width="67" />
-                <Button Content="Add" Width="100" Margin="5" Click="AddExtension_Click"/>
-                <Button Content="Remove" Width="100" Margin="5" Click="RemoveExtension_Click"/>
+                <Button Content="{Binding BtnAdd}" Width="100" Margin="5" Click="AddExtension_Click"/>
+                <Button Content="{Binding BtnRemove}" Width="100" Margin="5" Click="RemoveExtension_Click"/>
             </StackPanel>
-            <Button Content="Save Extensions" Width="150" Margin="5" Click="SaveExtensions_Click"/>
+            <Button Content="{Binding BtnSave}" Width="150" Margin="5" Click="SaveExtensions_Click"/>
 
             <!-- 🔄 Language Switcher -->
-            <TextBlock Text="Language:" FontSize="16" Margin="15 5 5 5"/>
+            <TextBlock Text="{Binding LblLanguage}" FontSize="16" Margin="15 5 5 5"/>
             <ComboBox x:Name="LanguageComboBox" SelectionChanged="LanguageComboBox_SelectionChanged" Margin="5">
-                <ComboBoxItem Content="English" Tag="en"/>
-                <ComboBoxItem Content="Français" Tag="fr"/>
+                <ComboBoxItem Content="English" Tag="en" />
+                <ComboBoxItem Content="Français" Tag="fr" />
             </ComboBox>
 
             <!-- ✅ Log Format Switcher -->
@@ -30,19 +35,19 @@
                     <ComboBoxItem Content="JSON" Tag="json"/>
                     <ComboBoxItem Content="XML" Tag="xml"/>
                 </ComboBox>
-                <Button Content="Apply Format" Width="120" Margin="5" Click="ApplyLogFormat_Click"/>
+                <Button Content="{Binding BtnApplyFormat}" Width="120" Margin="5" Click="ApplyLogFormat_Click"/>
             </StackPanel>
 
             <!-- ✅ Blocked Software Section -->
-            <TextBlock Text="Blocked Software Packages:" FontSize="16" Margin="15 5 5 5"/>
+            <TextBlock Text="{Binding LblBlocked}" FontSize="16" Margin="15 5 5 5"/>
             <ListBox x:Name="BlockedSoftwareListBox" Height="150" Margin="5"/>
             <StackPanel Orientation="Horizontal" Margin="5">
                 <TextBox x:Name="BlockedSoftwareTextBox" Width="150" Margin="5"/>
-                <Button Content="Browse" Width="80" Margin="5" Click="BrowseBlockedSoftware_Click"/>
-                <Button Content="Add" Width="80" Margin="5" Click="AddBlockedSoftware_Click"/>
-                <Button Content="Remove" Width="80" Margin="5" Click="RemoveBlockedSoftware_Click"/>
+                <Button Content="📂" Width="30" Margin="5" Click="BrowseBlockedSoftware_Click"/>
+                <Button Content="{Binding BtnAdd}" Width="80" Margin="5" Click="AddBlockedSoftware_Click"/>
+                <Button Content="{Binding BtnRemove}" Width="80" Margin="5" Click="RemoveBlockedSoftware_Click"/>
             </StackPanel>
-            <Button Content="Save Blocked Software" Width="200" Margin="5" Click="SaveBlockedSoftware_Click"/>
+            <Button Content="{Binding BtnSaveBlocked}" Width="200" Margin="5" Click="SaveBlockedSoftware_Click"/>
 
         </StackPanel>
     </ScrollViewer>

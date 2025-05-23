@@ -5,6 +5,7 @@ namespace EasySaveProSoft.WPF.Views
 {
     public partial class BackupJobsView : UserControl
     {
+        public LocalizationViewModel Loc { get; set; } = new LocalizationViewModel();
         public BackupJobsView()
         {
             InitializeComponent();

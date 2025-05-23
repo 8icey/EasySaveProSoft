@@ -8,11 +8,16 @@ using System.Windows;
 using Microsoft.Win32;
 using System.IO;
 using EasySaveProSoft.Services;
+using EasySaveProSoft.WPF.Services;
 
 namespace EasySaveProSoft.WPF.ViewModels
 {
+    
+
     public class BackupJobsViewModel : INotifyPropertyChanged
     {
+        public LocalizationViewModel Loc { get; } = new LocalizationViewModel();
+
         public BackupType[] BackupTypes => (BackupType[])Enum.GetValues(typeof(BackupType));
 
         public BackupManager Manager { get; private set; } = new BackupManager();
@@ -133,7 +138,7 @@ namespace EasySaveProSoft.WPF.ViewModels
         {
             if (string.IsNullOrWhiteSpace(NewJobName) || string.IsNullOrWhiteSpace(NewJobSource) || string.IsNullOrWhiteSpace(NewJobTarget))
             {
-                MessageBox.Show("Please fill in all fields to create a backup job.");
+                MessageBox.Show(WpfLanguageService.Instance.Translate("msg_fill_fields"));
                 return;
             }
 
@@ -155,7 +160,7 @@ namespace EasySaveProSoft.WPF.ViewModels
             }
             else
             {
-                MessageBox.Show("Invalid source or target paths.");
+                MessageBox.Show(WpfLanguageService.Instance.Translate("msg_invalid_paths"));
             }
         }
 
@@ -203,10 +208,12 @@ namespace EasySaveProSoft.WPF.ViewModels
             if (SoftwareDetector.IsBlockedSoftwareRunning())
             {
                 string running = SoftwareDetector.GetFirstBlockedProcess();
-                MessageBox.Show($"Execution blocked. Please close {running} to proceed.",
-                                "Blocked Software Running",
-                                MessageBoxButton.OK,
-                                MessageBoxImage.Warning);
+                MessageBox.Show(
+                    string.Format(WpfLanguageService.Instance.Translate("msg_blocked_software"), running),
+                     "Blocked Software Running",
+                  MessageBoxButton.OK,
+                    MessageBoxImage.Warning
+   );
                 return;
             }
             Task.Run(() =>
@@ -217,7 +224,7 @@ namespace EasySaveProSoft.WPF.ViewModels
                 Application.Current.Dispatcher.Invoke(() =>
                 {
                     _logger.LogJobStatus(SelectedBackupJob, true);
-                    MessageBox.Show($"Backup job '{SelectedBackupJob.Name}' executed.");
+                    MessageBox.Show(string.Format(WpfLanguageService.Instance.Translate("msg_job_executed"), SelectedBackupJob.Name));
                 });
             });
         }
@@ -234,16 +241,29 @@ namespace EasySaveProSoft.WPF.ViewModels
             Manager.DeleteJob(name);
             BackupJobs.Remove(SelectedBackupJob);
             SelectedBackupJob = null;
-            MessageBox.Show($"Backup job '{name}' deleted.");
+            MessageBox.Show(string.Format(WpfLanguageService.Instance.Translate("msg_job_deleted"), name));
+
         }
 
         private async Task RunAllBackups()
         {
             ProgressValue = 0;
+            // ✅ DO THIS BEFORE THE TASK
+            if (SoftwareDetector.IsBlockedSoftwareRunning())
+            {
+                string running = SoftwareDetector.GetFirstBlockedProcess();
+                MessageBox.Show(
+                    string.Format(WpfLanguageService.Instance.Translate("msg_blocked_software"), running),
+                     "Blocked Software Running",
+                  MessageBoxButton.OK,
+                    MessageBoxImage.Warning
+   );
+                return;
+            }
 
             if (BackupJobs.Count == 0)
             {
-                MessageBox.Show("No backup jobs found.");
+                MessageBox.Show(WpfLanguageService.Instance.Translate("msg_no_jobs"));
                 return;
             }
 
@@ -256,7 +276,7 @@ namespace EasySaveProSoft.WPF.ViewModels
                 ProgressValue += step;
             }
 
-            MessageBox.Show("All backups executed.");
+            MessageBox.Show(WpfLanguageService.Instance.Translate("msg_all_executed"));
         }
 
         private void BrowseSource()
