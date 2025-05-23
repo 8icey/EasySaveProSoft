@@ -79,6 +79,10 @@
             <Button Content="{Binding Loc.BtnExecuteJob}" Width="100" Margin="5" Command="{Binding ExecuteBackupJobCommand}" />
             <Button Content="{Binding Loc.BtnExecuteAll}" Width="100" Margin="5" Command="{Binding RunAllBackupsCommand}" />
             <Button Content="{Binding Loc.BtnDeleteJob}" Width="120" Margin="5" Command="{Binding DeleteBackupJobCommand}" />
+
+            <Button Content="Pause" Width="80" Margin="5" Command="{Binding PauseCommand}" />
+            <Button Content="Resume" Width="80" Margin="5" Command="{Binding ResumeCommand}" />
+            <Button Content="Stop" Width="80" Margin="5" Command="{Binding StopCommand}" />
         </StackPanel>
     </Grid>
 </UserControl>

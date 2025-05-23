@@ -31,14 +31,22 @@ namespace EasySaveProSoft.ViewModels
         // Executes a backup job by name
         public void RunBackup(string name)
         {
-            Manager.RunJob(name);
+            var pauseEvent = new ManualResetEventSlim(true); // initially not paused
+            var cancellationToken = new CancellationToken(); // no cancellation logic yet
+
+            Manager.RunJob(name, pauseEvent, cancellationToken);
         }
 
-        // Executes all backup jobs
+
+        //// Executes all backup jobs
         public void RunAllBackups()
         {
-            Manager.RunAllJobs();
+            var pauseEvent = new ManualResetEventSlim(true); // initially not paused
+            var cancellationToken = new CancellationToken(); // no cancellation logic yet
+
+            Manager.RunAllJobs(pauseEvent, cancellationToken);
         }
+
 
         // Displays all backup jobs
         public void DisplayJobs()
