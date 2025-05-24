@@ -13,6 +13,8 @@ namespace EasySaveProSoft.WPF
     {
         private readonly BackupJobsViewModel _viewModel;
         private static Mutex mutex;
+        public static BackupJobsViewModel SharedViewModel { get; private set; }
+
         public static RemoteServerService RemoteServer { get; private set; }
         [DllImport("user32.dll")]
         private static extern bool SetForegroundWindow(IntPtr hWnd);
@@ -79,9 +81,17 @@ namespace EasySaveProSoft.WPF
 
             base.OnStartup(e);
 
-            var mainViewModel = new BackupJobsViewModel();
-            RemoteServer = new RemoteServerService(mainViewModel);
+
+
+            SharedViewModel = new BackupJobsViewModel();
+            RemoteServer = new RemoteServerService(SharedViewModel);
             RemoteServer.Start(9000);
+
+
+
+            //var mainViewModel = new BackupJobsViewModel();
+            //RemoteServer = new RemoteServerService(mainViewModel);
+            //RemoteServer.Start(9000);
             // Charger config
             AppConfig.Load();
 

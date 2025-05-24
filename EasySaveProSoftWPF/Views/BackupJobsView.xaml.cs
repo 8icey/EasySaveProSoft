@@ -12,8 +12,9 @@ namespace EasySaveProSoft.WPF.Views
         public BackupJobsView()
         {
             InitializeComponent();
-            var vm = new BackupJobsViewModel(); // or reuse the same one
-            DataContext = vm;
+            //var vm = new BackupJobsViewModel(); // or reuse the same one
+            //DataContext = vm;
+            DataContext = App.SharedViewModel;
         }
     }
 
