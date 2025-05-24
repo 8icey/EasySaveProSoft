@@ -471,43 +471,73 @@ namespace EasySaveProSoft.WPF.ViewModels
             ((RelayCommand)StopCommand).RaiseCanExecuteChanged();
         }
 
+        //public void HandleRemoteCommand(string commandLine)
+        //{
+        //    if (string.IsNullOrWhiteSpace(commandLine))
+        //        return;
+
+        //    string[] parts = commandLine.Split(' ', 2);
+        //    if (parts.Length < 2) return;
+
+        //    string command = parts[0].ToLower();
+        //    string jobName = parts[1].Trim();
+
+        //    var job = BackupJobs.FirstOrDefault(j => j.Name.Equals(jobName, StringComparison.OrdinalIgnoreCase));
+        //    if (job == null)
+        //    {
+        //        Console.WriteLine($"[Remote] No job found named '{jobName}'");
+        //        return;
+        //    }
+
+        //    if (SelectedBackupJob != job)
+        //        SelectedBackupJob = job;
+
+        //    Application.Current.Dispatcher.Invoke(() =>
+        //    {
+        //        switch (command)
+        //        {
+        //            case "pause":
+        //                Pause();
+        //                break;
+        //            case "resume":
+        //                Resume();
+        //                break;
+        //            case "stop":
+        //                Stop();
+        //                break;
+        //        }
+        //    });
+        //}
+
         public void HandleRemoteCommand(string commandLine)
         {
             if (string.IsNullOrWhiteSpace(commandLine))
                 return;
 
-            string[] parts = commandLine.Split(' ', 2);
-            if (parts.Length < 2) return;
-
-            string command = parts[0].ToLower();
-            string jobName = parts[1].Trim();
-
-            var job = BackupJobs.FirstOrDefault(j => j.Name.Equals(jobName, StringComparison.OrdinalIgnoreCase));
-            if (job == null)
-            {
-                Console.WriteLine($"[Remote] No job found named '{jobName}'");
-                return;
-            }
-
-            if (SelectedBackupJob != job)
-                SelectedBackupJob = job;
+            var command = commandLine.Trim().ToLower();
 
             Application.Current.Dispatcher.Invoke(() =>
             {
                 switch (command)
                 {
                     case "pause":
-                        Pause();
+                        if (!_isPaused)
+                            Pause();
                         break;
                     case "resume":
-                        Resume();
+                        if (_isPaused)
+                            Resume();
                         break;
                     case "stop":
                         Stop();
                         break;
+                    default:
+                        Console.WriteLine($"[Remote] Unknown command: {command}");
+                        break;
                 }
             });
         }
+
     }
-    }
+}
 

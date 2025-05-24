@@ -4,13 +4,16 @@ using EasySaveProSoft.WPF.Services;
 using System.Runtime.InteropServices;
 using System.Diagnostics;
 using System.Windows;
+using EasySaveProSoft.WPF.ViewModels;
 
 namespace EasySaveProSoft.WPF
 {
     /// </summary>
     public partial class App : Application
     {
+        private readonly BackupJobsViewModel _viewModel;
         private static Mutex mutex;
+        public static RemoteServerService RemoteServer { get; private set; }
         [DllImport("user32.dll")]
         private static extern bool SetForegroundWindow(IntPtr hWnd);
 
@@ -75,7 +78,10 @@ namespace EasySaveProSoft.WPF
             }
 
             base.OnStartup(e);
-           
+
+            var mainViewModel = new BackupJobsViewModel();
+            RemoteServer = new RemoteServerService(mainViewModel);
+            RemoteServer.Start(9000);
             // Charger config
             AppConfig.Load();
 

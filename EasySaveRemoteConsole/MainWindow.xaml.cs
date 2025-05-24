@@ -1,4 +1,5 @@
-﻿using System.Text;
+﻿using EasySaveProSoft.WPF.Views;
+using System.Text;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Data;
@@ -19,6 +20,7 @@ namespace EasySaveRemoteConsole
         public MainWindow()
         {
             InitializeComponent();
+           
         }
     }
 }

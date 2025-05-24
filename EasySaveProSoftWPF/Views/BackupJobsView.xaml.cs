@@ -12,12 +12,8 @@ namespace EasySaveProSoft.WPF.Views
         public BackupJobsView()
         {
             InitializeComponent();
-            _viewModel = new BackupJobsViewModel();
-            DataContext = _viewModel;
-
-            // Start the remote server
-            RemoteServerService server = new RemoteServerService(_viewModel);
-            server.Start(9000);
+            var vm = new BackupJobsViewModel(); // or reuse the same one
+            DataContext = vm;
         }
     }
 
