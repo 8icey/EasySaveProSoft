@@ -9,6 +9,8 @@ using Microsoft.Win32;
 using System.IO;
 using EasySaveProSoft.Services;
 using EasySaveProSoft.WPF.Services;
+using System.Windows.Controls;
+using Newtonsoft.Json.Linq;
 
 namespace EasySaveProSoft.WPF.ViewModels
 {
@@ -24,8 +26,12 @@ namespace EasySaveProSoft.WPF.ViewModels
         public ObservableCollection<BackupJob> BackupJobs { get; private set; }
 
         private Logger _logger = new Logger();
-
+       
+        private CancellationTokenSource _cts = new();
+        private bool _isPaused;
+        private readonly ManualResetEventSlim _pauseEvent = new(true);
         private BackupJob _selectedBackupJob;
+        
         public BackupJob SelectedBackupJob
         {
             get => _selectedBackupJob;
@@ -35,6 +41,8 @@ namespace EasySaveProSoft.WPF.ViewModels
                 OnPropertyChanged();
                 ((RelayCommand)ExecuteBackupJobCommand).RaiseCanExecuteChanged();
                 ((RelayCommand)DeleteBackupJobCommand).RaiseCanExecuteChanged();
+              
+
             }
         }
 
@@ -120,10 +128,17 @@ namespace EasySaveProSoft.WPF.ViewModels
         public ICommand RunAllBackupsCommand { get; }
         public ICommand BrowseSourceCommand { get; }
         public ICommand BrowseDestinationCommand { get; }
+        public ICommand PauseCommand { get; }
+        public ICommand ResumeCommand { get; }
+        public ICommand StopCommand { get; }
 
         public BackupJobsViewModel()
+
         {
             BackupJobs = new ObservableCollection<BackupJob>(Manager.Jobs);
+            PauseCommand = new RelayCommand(_ => Pause(), _ => !_isPaused);
+            ResumeCommand = new RelayCommand(_ => Resume(), _ => _isPaused);
+            StopCommand = new RelayCommand(_ => Stop(), _ => _cts != null);
 
             CreateBackupJobCommand = new RelayCommand(_ => CreateBackupJob());
             ExecuteBackupJobCommand = new RelayCommand(_ => ExecuteBackupJob(), _ => SelectedBackupJob != null);
@@ -199,27 +214,30 @@ namespace EasySaveProSoft.WPF.ViewModels
         //    });
         //}
 
-        public void ExecuteBackupJob()
+        public async void ExecuteBackupJob()
         {
             if (SelectedBackupJob == null)
                 return;
 
-            // ✅ DO THIS BEFORE THE TASK
             if (SoftwareDetector.IsBlockedSoftwareRunning())
             {
                 string running = SoftwareDetector.GetFirstBlockedProcess();
                 MessageBox.Show(
                     string.Format(WpfLanguageService.Instance.Translate("msg_blocked_software"), running),
-                     "Blocked Software Running",
-                  MessageBoxButton.OK,
+                    "Blocked Software Running",
+                    MessageBoxButton.OK,
                     MessageBoxImage.Warning
-   );
+                );
                 return;
             }
-            Task.Run(() =>
+
+            _cts = new CancellationTokenSource();
+            var token = _cts.Token;
+
+            await Task.Run(async () =>
             {
                 SelectedBackupJob.OnProgressUpdated += UpdateProgress;
-                SelectedBackupJob.Execute();
+                await SelectedBackupJob.Execute(_pauseEvent, token);
 
                 Application.Current.Dispatcher.Invoke(() =>
                 {
@@ -228,6 +246,7 @@ namespace EasySaveProSoft.WPF.ViewModels
                 });
             });
         }
+
 
 
 
@@ -245,19 +264,54 @@ namespace EasySaveProSoft.WPF.ViewModels
 
         }
 
+        //     private async Task RunAllBackups()
+        //     {
+        //         ProgressValue = 0;
+        //         // ✅ DO THIS BEFORE THE TASK
+        //         if (SoftwareDetector.IsBlockedSoftwareRunning())
+        //         {
+        //             string running = SoftwareDetector.GetFirstBlockedProcess();
+        //             MessageBox.Show(
+        //                 string.Format(WpfLanguageService.Instance.Translate("msg_blocked_software"), running),
+        //                  "Blocked Software Running",
+        //               MessageBoxButton.OK,
+        //                 MessageBoxImage.Warning
+        //);
+        //             return;
+        //         }
+
+        //         if (BackupJobs.Count == 0)
+        //         {
+        //             MessageBox.Show(WpfLanguageService.Instance.Translate("msg_no_jobs"));
+        //             return;
+        //         }
+
+        //         double step = 100.0 / BackupJobs.Count;
+
+        //         foreach (var job in BackupJobs)
+        //         {
+
+        //             await Task.Run(() => job.Execute());
+        //             _logger.LogJobStatus(job, true); // 🔹 Log après chaque exécution
+        //             ProgressValue += step;
+        //         }
+
+        //         MessageBox.Show(WpfLanguageService.Instance.Translate("msg_all_executed"));
+        //     }
+
         private async Task RunAllBackups()
         {
             ProgressValue = 0;
-            // ✅ DO THIS BEFORE THE TASK
+
             if (SoftwareDetector.IsBlockedSoftwareRunning())
             {
                 string running = SoftwareDetector.GetFirstBlockedProcess();
                 MessageBox.Show(
                     string.Format(WpfLanguageService.Instance.Translate("msg_blocked_software"), running),
-                     "Blocked Software Running",
-                  MessageBoxButton.OK,
+                    "Blocked Software Running",
+                    MessageBoxButton.OK,
                     MessageBoxImage.Warning
-   );
+                );
                 return;
             }
 
@@ -269,15 +323,19 @@ namespace EasySaveProSoft.WPF.ViewModels
 
             double step = 100.0 / BackupJobs.Count;
 
+            var cts = new CancellationTokenSource(); // create a token source
+            var pauseEvent = new ManualResetEventSlim(true); // allow execution to continue immediately
+
             foreach (var job in BackupJobs)
             {
-                await Task.Run(() => job.Execute());
-                _logger.LogJobStatus(job, true); // 🔹 Log après chaque exécution
+                await Task.Run(() => job.Execute(pauseEvent, cts.Token));
+                _logger.LogJobStatus(job, true);
                 ProgressValue += step;
             }
 
             MessageBox.Show(WpfLanguageService.Instance.Translate("msg_all_executed"));
         }
+
 
         private void BrowseSource()
         {
@@ -330,5 +388,36 @@ namespace EasySaveProSoft.WPF.ViewModels
         {
             PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propName));
         }
+
+
+        private void Pause()
+        {
+            _isPaused = true;
+            _pauseEvent.Reset();
+            UpdateCommandStates();
+        }
+
+        private void Resume()
+        {
+            _isPaused = false;
+            _pauseEvent.Set();
+            UpdateCommandStates();
+        }
+
+        private void Stop()
+        {
+            _cts.Cancel();
+            _pauseEvent.Set(); // In case it's paused
+            MessageBox.Show("Backup stopped.");
+        }
+
+        private void UpdateCommandStates()
+        {
+            ((RelayCommand)PauseCommand).RaiseCanExecuteChanged();
+            ((RelayCommand)ResumeCommand).RaiseCanExecuteChanged();
+            ((RelayCommand)StopCommand).RaiseCanExecuteChanged();
+        }
+
+
     }
 }

@@ -33,12 +33,12 @@ namespace EasySaveProSoft.Models
         }
 
         // Find and execute a backup job by name, then delete it
-        public void RunJob(string name)
+        public async Task RunJob(string name, ManualResetEventSlim pauseEvent, CancellationToken token)
         {
             var job = Jobs.Find(j => j.Name.Equals(name, StringComparison.OrdinalIgnoreCase));
             if (job != null)
             {
-                job.Execute();
+                await job.Execute(pauseEvent, token);
             }
             else
             {
@@ -49,7 +49,7 @@ namespace EasySaveProSoft.Models
         }
 
         // Execute all backup jobs
-        public void RunAllJobs()
+        public async Task RunAllJobs(ManualResetEventSlim pauseEvent, CancellationToken token)
         {
             if (Jobs.Count == 0)
             {
@@ -59,7 +59,7 @@ namespace EasySaveProSoft.Models
             {
                 foreach (var job in Jobs)
                 {
-                    job.Execute();
+                    await job.Execute(pauseEvent, token);
                 }
             }
         }
