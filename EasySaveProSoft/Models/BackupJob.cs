@@ -201,6 +201,19 @@ namespace EasySaveProSoft.Models
             return sourceModified > targetModified;
         }
 
+        public Thread StartInThread(ManualResetEventSlim pauseEvent, CancellationToken token)
+        {
+            Thread thread = new Thread(() =>
+            {
+                Console.WriteLine($"[THREAD] Démarrage du job : {Name}");
+                Execute(pauseEvent, token).Wait();
+            });
+
+            thread.Start();
+            return thread;
+        }
+
+
         public bool IsValid()
         {
             return Directory.Exists(SourcePath) && Directory.Exists(TargetPath);
@@ -218,5 +231,6 @@ namespace EasySaveProSoft.Models
             }
             return $"{len:0.##} {sizes[order]}";
         }
+
     }
 }

@@ -49,20 +49,29 @@ namespace EasySaveProSoft.Models
         }
 
         // Execute all backup jobs
-        public async Task RunAllJobs(ManualResetEventSlim pauseEvent, CancellationToken token)
+        public void RunAllJobs(ManualResetEventSlim pauseEvent, CancellationToken token)
         {
             if (Jobs.Count == 0)
             {
-                Console.WriteLine("[!] No backup jobs found.");
+                Console.WriteLine("[!] Aucun job de sauvegarde trouvé.");
+                return;
             }
-            else
+
+            List<Thread> threads = new List<Thread>();
+
+            foreach (var job in Jobs)
             {
-                foreach (var job in Jobs)
-                {
-                    await job.Execute(pauseEvent, token);
-                }
+                var thread = job.StartInThread(pauseEvent, token);
+                threads.Add(thread);
             }
+
+            Console.WriteLine($"[INFO] {threads.Count} jobs de sauvegarde lancés en parallèle.");
+
+            // Optionnel : attendre la fin
+            // foreach (var t in threads)
+            //     t.Join();
         }
+
 
         // ✅ **NEW** — Delete a job from the list and the JSON
         public void DeleteJob(string name)
