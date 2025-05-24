@@ -11,6 +11,7 @@ using EasySaveProSoft.Services;
 using EasySaveProSoft.WPF.Services;
 using System.Windows.Controls;
 using Newtonsoft.Json.Linq;
+using EasySaveProSoft.WPF.Views;
 
 namespace EasySaveProSoft.WPF.ViewModels
 {
@@ -149,6 +150,58 @@ namespace EasySaveProSoft.WPF.ViewModels
             BrowseDestinationCommand = new RelayCommand(_ => BrowseDestination());
         }
 
+        private async Task RunAllBackups()
+        {
+            if (SoftwareDetector.IsBlockedSoftwareRunning())
+            {
+                string running = SoftwareDetector.GetFirstBlockedProcess();
+                MessageBox.Show(
+                    string.Format(WpfLanguageService.Instance.Translate("msg_blocked_software"), running),
+                    "Blocked Software Running",
+                    MessageBoxButton.OK,
+                    MessageBoxImage.Warning
+                );
+                return;
+            }
+
+            if (BackupJobs.Count == 0)
+            {
+                MessageBox.Show(WpfLanguageService.Instance.Translate("msg_no_jobs"));
+                return;
+            }
+
+            var pauseEvent = new ManualResetEventSlim(true);
+            var token = _cts.Token;
+
+            var progressVM = new AllBackupsProgressViewModel();
+            var progressWindow = new AllBackupsProgressWindow(progressVM);
+            progressWindow.Show();
+
+            foreach (var job in BackupJobs)
+            {
+                var jobVM = new BackupProgressViewModel
+                {
+                    JobName = job.Name,
+                    ProgressValue = 0,
+                    SizeText = "0 B",
+                    EstimatedTime = ""
+                };
+
+                progressVM.AddJob(jobVM);
+
+                job.OnProgressUpdated += (progress, size, eta) =>
+                {
+                    Application.Current.Dispatcher.Invoke(() =>
+                    {
+                        jobVM.ProgressValue = progress;
+                        jobVM.SizeText = size;
+                        jobVM.EstimatedTime = eta;
+                    });
+                };
+
+                job.StartInThread(pauseEvent, token);
+            }
+        }
         public void CreateBackupJob()
         {
             if (string.IsNullOrWhiteSpace(NewJobName) || string.IsNullOrWhiteSpace(NewJobSource) || string.IsNullOrWhiteSpace(NewJobTarget))
@@ -299,42 +352,42 @@ namespace EasySaveProSoft.WPF.ViewModels
         //         MessageBox.Show(WpfLanguageService.Instance.Translate("msg_all_executed"));
         //     }
 
-        private async Task RunAllBackups()
-        {
-            ProgressValue = 0;
+        //private async Task RunAllBackups()
+        //{
+        //    ProgressValue = 0;
 
-            if (SoftwareDetector.IsBlockedSoftwareRunning())
-            {
-                string running = SoftwareDetector.GetFirstBlockedProcess();
-                MessageBox.Show(
-                    string.Format(WpfLanguageService.Instance.Translate("msg_blocked_software"), running),
-                    "Blocked Software Running",
-                    MessageBoxButton.OK,
-                    MessageBoxImage.Warning
-                );
-                return;
-            }
+        //    if (SoftwareDetector.IsBlockedSoftwareRunning())
+        //    {
+        //        string running = SoftwareDetector.GetFirstBlockedProcess();
+        //        MessageBox.Show(
+        //            string.Format(WpfLanguageService.Instance.Translate("msg_blocked_software"), running),
+        //            "Blocked Software Running",
+        //            MessageBoxButton.OK,
+        //            MessageBoxImage.Warning
+        //        );
+        //        return;
+        //    }
 
-            if (BackupJobs.Count == 0)
-            {
-                MessageBox.Show(WpfLanguageService.Instance.Translate("msg_no_jobs"));
-                return;
-            }
+        //    if (BackupJobs.Count == 0)
+        //    {
+        //        MessageBox.Show(WpfLanguageService.Instance.Translate("msg_no_jobs"));
+        //        return;
+        //    }
 
-            double step = 100.0 / BackupJobs.Count;
+        //    double step = 100.0 / BackupJobs.Count;
 
-            var cts = new CancellationTokenSource(); // create a token source
-            var pauseEvent = new ManualResetEventSlim(true); // allow execution to continue immediately
+        //    var cts = new CancellationTokenSource(); // create a token source
+        //    var pauseEvent = new ManualResetEventSlim(true); // allow execution to continue immediately
 
-            foreach (var job in BackupJobs)
-            {
-                await Task.Run(() => job.Execute(pauseEvent, cts.Token));
-                _logger.LogJobStatus(job, true);
-                ProgressValue += step;
-            }
+        //    foreach (var job in BackupJobs)
+        //    {
+        //        await Task.Run(() => job.Execute(pauseEvent, cts.Token));
+        //        _logger.LogJobStatus(job, true);
+        //        ProgressValue += step;
+        //    }
 
-            MessageBox.Show(WpfLanguageService.Instance.Translate("msg_all_executed"));
-        }
+        //    MessageBox.Show(WpfLanguageService.Instance.Translate("msg_all_executed"));
+        //}
 
 
         private void BrowseSource()
