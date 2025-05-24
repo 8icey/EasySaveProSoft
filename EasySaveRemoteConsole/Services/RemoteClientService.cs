@@ -9,6 +9,7 @@ namespace EasySaveRemoteConsole.Services
     public class RemoteClientService
     {
         private TcpClient _client;
+
         private NetworkStream _stream;
 
         public event Action<string> OnMessageReceived;
