@@ -1,19 +1,18 @@
 ﻿using System;
 using System.Diagnostics;
 using System.IO;
-using System.Windows;
-using EasySaveProSoft.Services;
-using System.Collections.Generic;
-using Newtonsoft.Json;
 using System.Threading;
 using System.Threading.Tasks;
+using System.Collections.Generic;
+using EasySaveProSoft.Services;
+using Newtonsoft.Json;
 
 namespace EasySaveProSoft.Models
 {
     public class BackupJob
     {
-        public static SemaphoreSlim LargeFileLock = new SemaphoreSlim(1, 1); // Max 1 large file at a time
-        public static long LargeFileThresholdBytes = 1L * 1024 * 1024 * 1024; // 1 GB
+        public static SemaphoreSlim LargeFileLock = new SemaphoreSlim(1, 1);
+        public static long LargeFileThresholdBytes = 1L * 1024 * 1024 * 1024;
 
         public string Name { get; set; }
         public string SourcePath { get; set; }
@@ -36,7 +35,6 @@ namespace EasySaveProSoft.Models
         {
             try
             {
-                // ✅ Initial blocked software check
                 if (SoftwareDetector.IsBlockedSoftwareRunning())
                 {
                     string blocked = SoftwareDetector.GetFirstBlockedProcess();
@@ -55,18 +53,23 @@ namespace EasySaveProSoft.Models
                 foreach (var file in files)
                     totalSize += new FileInfo(file).Length;
 
+                // 🔄 Étape 1 : Enregistrement des fichiers prioritaires
+                var priorityExtensions = AppConfig.GetPriorityExtensions();
+                foreach (var file in files)
+                {
+                    string ext = Path.GetExtension(file).ToLower();
+                    if (priorityExtensions.Contains(ext))
+                        PriorityFileCoordinator.RegisterPriorityFile(file);
+                }
+
                 Stopwatch globalTimer = Stopwatch.StartNew();
                 int currentFile = 0;
 
                 foreach (var file in files)
                 {
-                    // 🔹 Check for cancellation
                     token.ThrowIfCancellationRequested();
-
-                    // ⏸ Pause support
                     pauseEvent.Wait();
 
-                    // 🔄 Blocked software re-check during execution
                     await WaitWhileBlockedAsync();
 
                     string relativePath = Path.GetRelativePath(SourcePath, file);
@@ -75,6 +78,13 @@ namespace EasySaveProSoft.Models
                     bool isLarge = fileSize >= LargeFileThresholdBytes;
 
                     Directory.CreateDirectory(Path.GetDirectoryName(destinationFile) ?? string.Empty);
+
+                    // 🔄 Étape 2 : Bloquer les non-prioritaires s’il en reste
+                    string fileExt = Path.GetExtension(file).ToLower();
+                    if (!priorityExtensions.Contains(fileExt))
+                    {
+                        PriorityFileCoordinator.WaitUntilNoPriorityLeft();
+                    }
 
                     if (Type == BackupType.Full || (Type == BackupType.Differential && IsNewer(file, destinationFile)))
                     {
@@ -121,6 +131,12 @@ namespace EasySaveProSoft.Models
                             EncryptionTimeMs = encryptionTimeMs
                         });
 
+                        // 🔄 Étape 3 : Marquer comme traité
+                        if (priorityExtensions.Contains(fileExt))
+                        {
+                            PriorityFileCoordinator.MarkAsProcessed(file);
+                        }
+
                         currentFile++;
                         double progress = (double)currentFile / totalFiles * 100;
                         string sizeText = $"{FormatSize(transferredSize)} / {FormatSize(totalSize)}";
@@ -139,26 +155,22 @@ namespace EasySaveProSoft.Models
             catch (OperationCanceledException)
             {
                 Console.WriteLine("[CANCELED] Backup was canceled.");
-                //_logger.LogInfo("Backup was canceled by the user.");
                 return false;
             }
             catch (Exception ex)
             {
                 Console.WriteLine($"[FATAL ERROR] {ex.Message}");
-                //_logger.LogError("Fatal error during backup: " + ex.Message);
                 return false;
             }
         }
 
-
-        // 🔄 Pauses file execution until all blocked software is closed
         private async Task WaitWhileBlockedAsync()
         {
             while (SoftwareDetector.IsBlockedSoftwareRunning())
             {
                 string blocked = SoftwareDetector.GetFirstBlockedProcess();
                 Console.WriteLine($"⏸️ Paused due to: {blocked}");
-                await Task.Delay(1000); // Recheck every second
+                await Task.Delay(1000);
             }
         }
 
@@ -201,19 +213,6 @@ namespace EasySaveProSoft.Models
             return sourceModified > targetModified;
         }
 
-        public Thread StartInThread(ManualResetEventSlim pauseEvent, CancellationToken token)
-        {
-            Thread thread = new Thread(() =>
-            {
-                Console.WriteLine($"[THREAD] Démarrage du job : {Name}");
-                Execute(pauseEvent, token).Wait();
-            });
-
-            thread.Start();
-            return thread;
-        }
-
-
         public bool IsValid()
         {
             return Directory.Exists(SourcePath) && Directory.Exists(TargetPath);
@@ -231,6 +230,5 @@ namespace EasySaveProSoft.Models
             }
             return $"{len:0.##} {sizes[order]}";
         }
-
     }
 }

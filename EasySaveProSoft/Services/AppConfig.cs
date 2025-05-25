@@ -46,5 +46,28 @@ namespace EasySaveProSoft.Services
         {
             _config[key] = value;
         }
+
+        public static List<string> GetPriorityExtensions()
+        {
+            string raw = Get("PriorityExtensions", "");
+            var list = new List<string>();
+            if (!string.IsNullOrWhiteSpace(raw))
+            {
+                foreach (var ext in raw.Split(','))
+                {
+                    var clean = ext.Trim().ToLower();
+                    if (!string.IsNullOrEmpty(clean))
+                        list.Add(clean.StartsWith(".") ? clean : "." + clean);
+                }
+            }
+            return list;
+        }
+
+        public static void SetPriorityExtensions(List<string> extensions)
+        {
+            string joined = string.Join(",", extensions);
+            Set("PriorityExtensions", joined);
+            Save();
+        }
     }
 }

@@ -199,7 +199,9 @@ namespace EasySaveProSoft.WPF.ViewModels
                     });
                 };
 
-                job.StartInThread(pauseEvent, token);
+                var thread = new Thread(() => job.Execute(pauseEvent, token).Wait());
+                thread.Start();
+
             }
         }
         public void CreateBackupJob()

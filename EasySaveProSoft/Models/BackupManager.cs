@@ -61,7 +61,9 @@ namespace EasySaveProSoft.Models
 
             foreach (var job in Jobs)
             {
-                var thread = job.StartInThread(pauseEvent, token);
+                var thread = new Thread(() => job.Execute(pauseEvent, token).Wait());
+                thread.Start();
+
                 threads.Add(thread);
             }
 
