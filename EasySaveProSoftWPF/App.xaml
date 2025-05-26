@@ -5,7 +5,47 @@
              StartupUri="Views/MainWindow.xaml">
 
     <Application.Resources>
-        <converters:BoolToBrushConverter x:Key="BoolToBrushConverter" />
-        <converters:InverseBoolToVisibilityConverter x:Key="InverseBoolToVisibilityConverter" />
+        <ResourceDictionary>
+            <!-- Button Style -->
+            <Style TargetType="Button">
+                <Setter Property="Background" Value="#4A90E2"/>
+                <Setter Property="Foreground" Value="White"/>
+                <Setter Property="FontSize" Value="14"/>
+                <Setter Property="Padding" Value="10,5"/>
+                <Setter Property="Margin" Value="5"/>
+                <Setter Property="BorderThickness" Value="0"/>
+                <Setter Property="Cursor" Value="Hand"/>
+                <Setter Property="FontWeight" Value="SemiBold"/>
+                <Setter Property="Template">
+                    <Setter.Value>
+                        <ControlTemplate TargetType="Button">
+                            <Border Background="{TemplateBinding Background}" 
+                                CornerRadius="6"
+                                Padding="{TemplateBinding Padding}">
+                                <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                            </Border>
+                        </ControlTemplate>
+                    </Setter.Value>
+                </Setter>
+            </Style>
+
+            <!-- Label Style -->
+            <Style TargetType="Label">
+                <Setter Property="FontSize" Value="13"/>
+                <Setter Property="Margin" Value="4"/>
+                <Setter Property="FontWeight" Value="Bold"/>
+            </Style>
+
+            <!-- TextBox Style -->
+            <Style TargetType="TextBox">
+                <Setter Property="FontSize" Value="13"/>
+                <Setter Property="Margin" Value="5"/>
+                <Setter Property="Padding" Value="6"/>
+                <Setter Property="BorderBrush" Value="#CCC"/>
+                <Setter Property="BorderThickness" Value="1"/>
+                <Setter Property="Height" Value="28"/>
+            </Style>
+        </ResourceDictionary>
     </Application.Resources>
+
 </Application>

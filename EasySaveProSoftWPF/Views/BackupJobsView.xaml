@@ -9,14 +9,14 @@
              d:DataContext="{d:DesignInstance Type=viewmodels:BackupJobsViewModel}"
              Background="White">
 
-    
+
     <UserControl.Resources>
         <converters:BoolToBrushConverter x:Key="BoolToBrushConverter" />
         <converters:InverseBoolToVisibilityConverter x:Key="InverseBoolToVisibilityConverter" />
     </UserControl.Resources>
 
     <Grid Margin="10">
-        
+
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto" />
             <RowDefinition Height="*" />
@@ -33,29 +33,29 @@
                 <TextBlock Text="{Binding Loc.LblType}" Width="120" Margin="5" VerticalAlignment="Center"/>
 
             </StackPanel>
-            <StackPanel Orientation="Horizontal">
+            <StackPanel Orientation="Horizontal" Width="869">
                 <TextBox Width="120" Margin="5" Text="{Binding NewJobName, UpdateSourceTrigger=PropertyChanged}" />
 
-                <DockPanel Width="180" Margin="5">
+                <DockPanel Width="204" Margin="5" Height="42">
                     <TextBox Text="{Binding NewJobSource, UpdateSourceTrigger=PropertyChanged}" 
                              BorderBrush="{Binding IsSourceValid, Converter={StaticResource BoolToBrushConverter}}"
                              BorderThickness="1" Width="147" />
                     <Button Content="📂"  DockPanel.Dock="Right" 
-                            Command="{Binding BrowseSourceCommand}"  RenderTransformOrigin="3.071,0.483" Width="30" />
+                            Command="{Binding BrowseSourceCommand}"  RenderTransformOrigin="3.071,0.483" Width="37" />
                 </DockPanel>
 
-                <DockPanel Width="180" Margin="5">
+                <DockPanel Width="209" Margin="5" Height="48">
                     <TextBox Text="{Binding NewJobTarget, UpdateSourceTrigger=PropertyChanged}" 
                              BorderBrush="{Binding IsDestinationValid, Converter={StaticResource BoolToBrushConverter}}"
                              BorderThickness="1" Width="151" />
-                    <Button Content="📂" Width="30" Height="Auto" DockPanel.Dock="Right" 
+                    <Button Content="📂" Width="36" Height="32" DockPanel.Dock="Right" 
                             Command="{Binding BrowseDestinationCommand}" />
                 </DockPanel>
 
                 <ComboBox Width="120" Margin="5"
                           ItemsSource="{Binding BackupTypes}"
-                          SelectedItem="{Binding NewJobType, UpdateSourceTrigger=PropertyChanged}" />
-                <Button Content="{Binding Loc.BtnCreateJob}" Width="100" Margin="5" Command="{Binding CreateBackupJobCommand}" />
+                          SelectedItem="{Binding NewJobType, UpdateSourceTrigger=PropertyChanged}" Height="33" />
+                <Button Content="{Binding Loc.BtnCreateJob}" Width="100" Margin="5" Command="{Binding CreateBackupJobCommand}" Height="40" />
             </StackPanel>
         </StackPanel>
 

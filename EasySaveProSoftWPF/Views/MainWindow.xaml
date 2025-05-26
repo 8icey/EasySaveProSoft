@@ -11,9 +11,11 @@
     <Grid>
         <DockPanel>
             <!-- Sidebar Navigation -->
-            <StackPanel DockPanel.Dock="Left" Width="150" Background="#2D2D30">
+            <StackPanel DockPanel.Dock="Left" Width="150" Background="	#D0E8FF">
+                <Image Source="C:\Users\Idris Hachi\Pictures\easy.png" Height="93" Width="164" RenderTransformOrigin="0.293,0.262"/>
                 <Button Content="{Binding MenuBackupJobs}" Click="NavigateToBackupJobs" Margin="5"/>
-                <Button Content="{Binding MenuSettings}" Click="NavigateToSettings" Margin="5"/>
+                <Button Content="{Binding MenuSettings}" Click="NavigateToSettings"/>
+
 
             </StackPanel>
 
