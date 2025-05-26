@@ -14,6 +14,8 @@ namespace EasySaveProSoft.WPF.ViewModels
         public string CurrentLanguage { get; set; } = "en";
 
         public ObservableCollection<string> PriorityOrder { get; set; }
+        
+
 
         private string _newExtension;
         public string NewExtension

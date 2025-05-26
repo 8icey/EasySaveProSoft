@@ -59,6 +59,11 @@ namespace EasySaveProSoft.WPF.Services
                     { "btn_pause", "Pause" },
                     { "btn_resume", "Resume" },
                     { "btn_stop", "Stop" },
+                    { "lbl_priority", "Priority Extensions :" },
+                    { "btn_moveup", "Go Up" },
+                    { "btn_movedown", "Go Down" },
+                    { "btn_add_priority", "Add" },
+                    { "btn_remove_priority", "Remove" },
 
 
                 }
@@ -98,6 +103,11 @@ namespace EasySaveProSoft.WPF.Services
  { "btn_pause", "Pause" },
  { "btn_resume", "Continue" },
  { "btn_stop", "Arrêt" },
+ { "lbl_priority", "Extensions prioritaires :" },
+ { "btn_moveup", "Monter" },
+                    { "btn_movedown", "Descendre" },
+                    { "btn_add_priority", "Ajouter" },
+                    { "btn_remove_priority", "Retirer" },
 
 
 

@@ -172,7 +172,10 @@ namespace EasySaveProSoft.WPF.Views
             }
         }
 
+        private void LogFormatComboBox_SelectionChanged(object sender, SelectionChangedEventArgs e)
+        {
 
-       
+
+        }
     }
 }

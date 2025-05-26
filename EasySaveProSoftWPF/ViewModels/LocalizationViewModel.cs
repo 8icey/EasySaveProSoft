@@ -33,6 +33,17 @@ namespace EasySaveProSoft.WPF.ViewModels
         public string BtnResume => _lang.Translate("btn_resume");
         public string BtnStop => _lang.Translate("btn_stop");
 
+
+
+
+
+        public string lbl_priority => _lang.Translate("lbl_priority");
+        public string btn_moveup => _lang.Translate("btn_moveup");
+        public string btn_movedown => _lang.Translate("btn_movedown");
+        public string btn_add_priority => _lang.Translate("btn_add_priority");
+        public string btn_remove_priority => _lang.Translate("btn_remove_priority");
+
+
         public LocalizationViewModel()
         {
             _lang.PropertyChanged += (_, _) => OnPropertyChanged(null); // Refresh all bindings when language changes
