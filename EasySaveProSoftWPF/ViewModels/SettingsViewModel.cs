@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
+using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Windows.Input;
 using EasySaveProSoft.Services;
@@ -12,7 +13,7 @@ namespace EasySaveProSoft.WPF.ViewModels
     {
         public string CurrentLanguage { get; set; } = "en";
 
-        public ObservableCollection<string> PriorityExtensions { get; set; }
+        public ObservableCollection<string> PriorityOrder { get; set; }
 
         private string _newExtension;
         public string NewExtension
@@ -22,7 +23,7 @@ namespace EasySaveProSoft.WPF.ViewModels
             {
                 _newExtension = value;
                 OnPropertyChanged();
-                _addExtensionCommand?.RaiseCanExecuteChanged(); // 🔧 Active/désactive dynamiquement le bouton
+                _addExtensionCommand?.RaiseCanExecuteChanged();
             }
         }
 
@@ -30,17 +31,27 @@ namespace EasySaveProSoft.WPF.ViewModels
         public string SelectedExtension
         {
             get => _selectedExtension;
-            set { _selectedExtension = value; OnPropertyChanged(); }
+            set
+            {
+                _selectedExtension = value;
+                OnPropertyChanged();
+                _moveUpCommand?.RaiseCanExecuteChanged();
+                _moveDownCommand?.RaiseCanExecuteChanged();
+            }
         }
 
-        // 🔧 On utilise une référence privée pour pouvoir appeler RaiseCanExecuteChanged
         private RelayCommand _addExtensionCommand;
+        private RelayCommand _moveUpCommand;
+        private RelayCommand _moveDownCommand;
+
         public ICommand AddExtensionCommand => _addExtensionCommand;
         public ICommand RemoveExtensionCommand { get; }
+        public ICommand MoveUpCommand => _moveUpCommand;
+        public ICommand MoveDownCommand => _moveDownCommand;
 
         public SettingsViewModel()
         {
-            PriorityExtensions = new ObservableCollection<string>(AppConfig.GetPriorityExtensions());
+            PriorityOrder = new ObservableCollection<string>(AppConfig.GetPriorityOrder());
 
             _addExtensionCommand = new RelayCommand(
                 _ => AddExtension(),
@@ -48,12 +59,9 @@ namespace EasySaveProSoft.WPF.ViewModels
             );
 
             RemoveExtensionCommand = new RelayCommand(p => RemoveExtension(p as string));
-        }
 
-        public void ChangeLanguage(string lang)
-        {
-            CurrentLanguage = lang;
-            // Update the language service if needed
+            _moveUpCommand = new RelayCommand(_ => Move(-1), _ => CanMove(-1));
+            _moveDownCommand = new RelayCommand(_ => Move(1), _ => CanMove(1));
         }
 
         private void AddExtension()
@@ -61,10 +69,10 @@ namespace EasySaveProSoft.WPF.ViewModels
             string ext = NewExtension.Trim().ToLower();
             if (!ext.StartsWith(".")) ext = "." + ext;
 
-            if (!PriorityExtensions.Contains(ext))
+            if (!PriorityOrder.Contains(ext))
             {
-                PriorityExtensions.Add(ext);
-                AppConfig.SetPriorityExtensions(new List<string>(PriorityExtensions));
+                PriorityOrder.Add(ext);
+                AppConfig.SetPriorityOrder(PriorityOrder.ToList());
             }
 
             NewExtension = string.Empty;
@@ -72,11 +80,32 @@ namespace EasySaveProSoft.WPF.ViewModels
 
         private void RemoveExtension(string ext)
         {
-            if (PriorityExtensions.Contains(ext))
+            if (PriorityOrder.Contains(ext))
             {
-                PriorityExtensions.Remove(ext);
-                AppConfig.SetPriorityExtensions(new List<string>(PriorityExtensions));
+                PriorityOrder.Remove(ext);
+                AppConfig.SetPriorityOrder(PriorityOrder.ToList());
             }
+        }
+
+        private void Move(int direction)
+        {
+            int index = PriorityOrder.IndexOf(SelectedExtension);
+            if (index < 0 || index + direction < 0 || index + direction >= PriorityOrder.Count) return;
+
+            PriorityOrder.Move(index, index + direction);
+            AppConfig.SetPriorityOrder(PriorityOrder.ToList());
+            OnPropertyChanged(nameof(PriorityOrder));
+        }
+
+        private bool CanMove(int direction)
+        {
+            int index = PriorityOrder.IndexOf(SelectedExtension);
+            return index >= 0 && index + direction >= 0 && index + direction < PriorityOrder.Count;
+        }
+
+        public void ChangeLanguage(string lang)
+        {
+            CurrentLanguage = lang;
         }
 
         public event PropertyChangedEventHandler PropertyChanged;

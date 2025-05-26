@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 
 namespace EasySaveProSoft.Services
 {
@@ -47,7 +48,8 @@ namespace EasySaveProSoft.Services
             _config[key] = value;
         }
 
-        public static List<string> GetPriorityExtensions()
+        // ✅ Nouvelle méthode : lire la liste ordonnée des extensions
+        public static List<string> GetPriorityOrder()
         {
             string raw = Get("PriorityExtensions", "");
             var list = new List<string>();
@@ -63,7 +65,8 @@ namespace EasySaveProSoft.Services
             return list;
         }
 
-        public static void SetPriorityExtensions(List<string> extensions)
+        // ✅ Nouvelle méthode : enregistrer la liste ordonnée des extensions
+        public static void SetPriorityOrder(List<string> extensions)
         {
             string joined = string.Join(",", extensions);
             Set("PriorityExtensions", joined);

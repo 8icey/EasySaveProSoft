@@ -4,6 +4,7 @@ using System.IO;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Collections.Generic;
+using System.Linq;
 using EasySaveProSoft.Services;
 using Newtonsoft.Json;
 
@@ -46,16 +47,27 @@ namespace EasySaveProSoft.Models
                 if (!Directory.Exists(SourcePath) || !Directory.Exists(TargetPath))
                     return true;
 
-                var files = Directory.GetFiles(SourcePath, "*", SearchOption.AllDirectories);
-                int totalFiles = files.Length;
+                // 🔄 Nouveau tri des fichiers par ordre d’extensions
+                var allFiles = Directory.GetFiles(SourcePath, "*", SearchOption.AllDirectories);
+                var priorityOrder = AppConfig.GetPriorityOrder();
+
+                var files = new List<string>();
+                foreach (var ext in priorityOrder)
+                {
+                    files.AddRange(allFiles.Where(f => Path.GetExtension(f).Equals(ext, StringComparison.OrdinalIgnoreCase)));
+                }
+
+                files.AddRange(allFiles.Where(f =>
+                    !priorityOrder.Contains(Path.GetExtension(f).ToLower())));
+
+                int totalFiles = files.Count;
                 long totalSize = 0;
                 long transferredSize = 0;
 
                 foreach (var file in files)
                     totalSize += new FileInfo(file).Length;
 
-                // 🔄 Étape 1 : Enregistrement des fichiers prioritaires
-                var priorityExtensions = AppConfig.GetPriorityExtensions();
+                var priorityExtensions = AppConfig.GetPriorityOrder();
                 foreach (var file in files)
                 {
                     string ext = Path.GetExtension(file).ToLower();
@@ -80,7 +92,6 @@ namespace EasySaveProSoft.Models
 
                     Directory.CreateDirectory(Path.GetDirectoryName(destinationFile) ?? string.Empty);
 
-                    // 🔄 Étape 2 : Bloquer les non-prioritaires s’il en reste
                     string fileExt = Path.GetExtension(file).ToLower();
                     if (!priorityExtensions.Contains(fileExt))
                     {
@@ -95,7 +106,7 @@ namespace EasySaveProSoft.Models
 
                         try
                         {
-                            if (isLarge)    
+                            if (isLarge)
                                 await LargeFileLock.WaitAsync();
 
                             if (ShouldEncrypt(file))
@@ -132,7 +143,6 @@ namespace EasySaveProSoft.Models
                             EncryptionTimeMs = encryptionTimeMs
                         });
 
-                        // 🔄 Étape 3 : Marquer comme traité
                         if (priorityExtensions.Contains(fileExt))
                         {
                             PriorityFileCoordinator.MarkAsProcessed(file);
