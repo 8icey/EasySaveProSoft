@@ -55,7 +55,10 @@ namespace EasySaveProSoft.WPF.Services
                     { "msg_extensions_saved", "Extensions saved successfully!" },
 { "msg_log_format_set", "Log format set to: {0}" },
 { "msg_blocked_saved", "Blocked software list saved!" },
-                    { "btn_apply_format", "Apply Format" }
+                    { "btn_apply_format", "Apply Format" },
+                    { "btn_pause", "Pause" },
+                    { "btn_resume", "Resume" },
+                    { "btn_stop", "Stop" },
 
 
                 }
@@ -91,7 +94,10 @@ namespace EasySaveProSoft.WPF.Services
                     { "msg_extensions_saved", "Extensions enregistrées avec succès !" },
 { "msg_log_format_set", "Format de journal défini sur : {0}" },
 { "msg_blocked_saved", "Liste des logiciels bloqués enregistrée !" },
- { "btn_apply_format", "Appliquer le format" }
+ { "btn_apply_format", "Appliquer le format" },
+ { "btn_pause", "Pause" },
+ { "btn_resume", "Continue" },
+ { "btn_stop", "Arrêt" },
 
 
 

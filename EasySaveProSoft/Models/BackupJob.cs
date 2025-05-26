@@ -15,6 +15,7 @@ namespace EasySaveProSoft.Models
         public static long LargeFileThresholdBytes = 1L * 1024 * 1024 * 1024;
 
         public string Name { get; set; }
+        public bool IsSelected { get; set; }
         public string SourcePath { get; set; }
         public string TargetPath { get; set; }
         public BackupType Type { get; set; }
@@ -94,7 +95,7 @@ namespace EasySaveProSoft.Models
 
                         try
                         {
-                            if (isLarge)
+                            if (isLarge)    
                                 await LargeFileLock.WaitAsync();
 
                             if (ShouldEncrypt(file))

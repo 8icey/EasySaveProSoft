@@ -22,6 +22,7 @@ namespace EasySaveProSoft.WPF.ViewModels
         public LocalizationViewModel Loc { get; } = new LocalizationViewModel();
 
         public BackupType[] BackupTypes => (BackupType[])Enum.GetValues(typeof(BackupType));
+       
 
         public BackupManager Manager { get; private set; } = new BackupManager();
         public ObservableCollection<BackupJob> BackupJobs { get; private set; }
@@ -132,6 +133,10 @@ namespace EasySaveProSoft.WPF.ViewModels
         public ICommand PauseCommand { get; }
         public ICommand ResumeCommand { get; }
         public ICommand StopCommand { get; }
+        public ICommand ExecuteSelectedJobsCommand { get; }
+
+        
+
 
         public BackupJobsViewModel()
 
@@ -148,6 +153,7 @@ namespace EasySaveProSoft.WPF.ViewModels
 
             BrowseSourceCommand = new RelayCommand(_ => BrowseSource());
             BrowseDestinationCommand = new RelayCommand(_ => BrowseDestination());
+            ExecuteSelectedJobsCommand = new RelayCommand(async _ => await ExecuteSelectedJobs());
         }
 
         private async Task RunAllBackups()
@@ -271,9 +277,31 @@ namespace EasySaveProSoft.WPF.ViewModels
 
         public async void ExecuteBackupJob()
         {
-            if (SelectedBackupJob == null)
-                return;
+            _cts = new CancellationTokenSource();
+            var token = _cts.Token;
 
+            var selectedJobs = BackupJobs.Where(j => j.IsSelected).ToList();
+
+            // Fallback to single selected job if no checkboxes selected
+            if (selectedJobs.Count == 0 && SelectedBackupJob != null)
+                selectedJobs.Add(SelectedBackupJob);
+
+            if (selectedJobs.Count == 0)
+            {
+                MessageBox.Show("Please select at least one job to execute.", "No Job Selected", MessageBoxButton.OK, MessageBoxImage.Information);
+                return;
+            }
+
+            // Filter out invalid jobs
+            var invalidJobs = selectedJobs.Where(j => !Directory.Exists(j.SourcePath) || !Directory.Exists(j.TargetPath)).ToList();
+            if (invalidJobs.Any())
+            {
+                string names = string.Join(", ", invalidJobs.Select(j => j.Name));
+                MessageBox.Show($"The following job(s) have invalid source or target paths:\n{names}", "Invalid Path", MessageBoxButton.OK, MessageBoxImage.Warning);
+                return;
+            }
+
+            // Blocked software check
             if (SoftwareDetector.IsBlockedSoftwareRunning())
             {
                 string running = SoftwareDetector.GetFirstBlockedProcess();
@@ -286,21 +314,44 @@ namespace EasySaveProSoft.WPF.ViewModels
                 return;
             }
 
-            _cts = new CancellationTokenSource();
-            var token = _cts.Token;
+            var pauseEvent = _pauseEvent;
 
-            await Task.Run(async () =>
+            List<Task> tasks = new();
+
+            foreach (var job in selectedJobs)
             {
-                SelectedBackupJob.OnProgressUpdated += UpdateProgress;
-                await SelectedBackupJob.Execute(_pauseEvent, token);
+                job.OnProgressUpdated += UpdateProgress;
 
-                Application.Current.Dispatcher.Invoke(() =>
+                var task = Task.Run(async () =>
                 {
-                    _logger.LogJobStatus(SelectedBackupJob, true);
-                    MessageBox.Show(string.Format(WpfLanguageService.Instance.Translate("msg_job_executed"), SelectedBackupJob.Name));
+                    bool success = await job.Execute(pauseEvent, token);
+
+                    Application.Current.Dispatcher.Invoke(() =>
+                    {
+                        _logger.LogJobStatus(job, success);
+                        if (success)
+                        {
+                            MessageBox.Show(string.Format(WpfLanguageService.Instance.Translate("msg_job_executed"), job.Name), "Backup Completed");
+                        }
+                        else
+                        {
+                            MessageBox.Show($"Backup job '{job.Name}' failed or was canceled.", "Backup Failed", MessageBoxButton.OK, MessageBoxImage.Error);
+                        }
+                    });
                 });
-            });
+
+                tasks.Add(task);
+            }
+
+            await Task.WhenAll(tasks);
+
+            // Progress bar reset
+            await Task.Delay(2000);
+            ProgressValue = 0;
+            FileSizeText = "";
+            EstimatedTimeText = "";
         }
+
 
 
 
@@ -319,78 +370,32 @@ namespace EasySaveProSoft.WPF.ViewModels
 
         }
 
-        //     private async Task RunAllBackups()
-        //     {
-        //         ProgressValue = 0;
-        //         // ✅ DO THIS BEFORE THE TASK
-        //         if (SoftwareDetector.IsBlockedSoftwareRunning())
-        //         {
-        //             string running = SoftwareDetector.GetFirstBlockedProcess();
-        //             MessageBox.Show(
-        //                 string.Format(WpfLanguageService.Instance.Translate("msg_blocked_software"), running),
-        //                  "Blocked Software Running",
-        //               MessageBoxButton.OK,
-        //                 MessageBoxImage.Warning
-        //);
-        //             return;
-        //         }
+        
 
-        //         if (BackupJobs.Count == 0)
-        //         {
-        //             MessageBox.Show(WpfLanguageService.Instance.Translate("msg_no_jobs"));
-        //             return;
-        //         }
+        private async Task ExecuteSelectedJobs()
+        {
+            var selected = BackupJobs.Where(j => j.IsSelected).ToList();
+            if (selected.Count == 0)
+            {
+                MessageBox.Show("No jobs selected.");
+                return;
+            }
 
-        //         double step = 100.0 / BackupJobs.Count;
+            foreach (var job in selected)
+            {
+                await Task.Run(() => job.Execute(_pauseEvent, _cts.Token));
+                _logger.LogJobStatus(job, true);
+            }
 
-        //         foreach (var job in BackupJobs)
-        //         {
-
-        //             await Task.Run(() => job.Execute());
-        //             _logger.LogJobStatus(job, true); // 🔹 Log après chaque exécution
-        //             ProgressValue += step;
-        //         }
-
-        //         MessageBox.Show(WpfLanguageService.Instance.Translate("msg_all_executed"));
-        //     }
-
-        //private async Task RunAllBackups()
-        //{
-        //    ProgressValue = 0;
-
-        //    if (SoftwareDetector.IsBlockedSoftwareRunning())
-        //    {
-        //        string running = SoftwareDetector.GetFirstBlockedProcess();
-        //        MessageBox.Show(
-        //            string.Format(WpfLanguageService.Instance.Translate("msg_blocked_software"), running),
-        //            "Blocked Software Running",
-        //            MessageBoxButton.OK,
-        //            MessageBoxImage.Warning
-        //        );
-        //        return;
-        //    }
-
-        //    if (BackupJobs.Count == 0)
-        //    {
-        //        MessageBox.Show(WpfLanguageService.Instance.Translate("msg_no_jobs"));
-        //        return;
-        //    }
-
-        //    double step = 100.0 / BackupJobs.Count;
-
-        //    var cts = new CancellationTokenSource(); // create a token source
-        //    var pauseEvent = new ManualResetEventSlim(true); // allow execution to continue immediately
-
-        //    foreach (var job in BackupJobs)
-        //    {
-        //        await Task.Run(() => job.Execute(pauseEvent, cts.Token));
-        //        _logger.LogJobStatus(job, true);
-        //        ProgressValue += step;
-        //    }
-
-        //    MessageBox.Show(WpfLanguageService.Instance.Translate("msg_all_executed"));
-        //}
-
+            ResetProgressBarAfterDelay();
+        }
+        private async void ResetProgressBarAfterDelay()
+        {
+            await Task.Delay(2000); // wait 2 seconds
+            ProgressValue = 0;
+            FileSizeText = "";
+            EstimatedTimeText = "";
+        }
 
         private void BrowseSource()
         {
@@ -464,6 +469,7 @@ namespace EasySaveProSoft.WPF.ViewModels
             _cts.Cancel();
             _pauseEvent.Set(); // In case it's paused
             MessageBox.Show("Backup stopped.");
+            ResetProgressBarAfterDelay();
         }
 
         private void UpdateCommandStates()

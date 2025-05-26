@@ -29,7 +29,10 @@ namespace EasySaveProSoft.WPF.ViewModels
         public string BtnSaveBlocked => _lang.Translate("btn_save_blocked");
         public string LblBlocked => _lang.Translate("lbl_blocked");
         public string BtnApplyFormat => _lang.Translate("btn_apply_format");
-        
+        public string BtnPause => _lang.Translate("btn_pause");
+        public string BtnResume => _lang.Translate("btn_resume");
+        public string BtnStop => _lang.Translate("btn_stop");
+
         public LocalizationViewModel()
         {
             _lang.PropertyChanged += (_, _) => OnPropertyChanged(null); // Refresh all bindings when language changes

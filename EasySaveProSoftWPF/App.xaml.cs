@@ -61,7 +61,7 @@ namespace EasySaveProSoft.WPF
 
             if (!createdNew)
             {
-                IntPtr hWnd = FindWindow(null, "EasySave"); // Replace with your exact window title
+                IntPtr hWnd = FindWindow(null, "EasySave 2.0"); // Replace with your exact window title
 
                 if (hWnd != IntPtr.Zero)
                 {

@@ -16,6 +16,11 @@ namespace EasySaveProSoft.WPF.Views
             //DataContext = vm;
             DataContext = App.SharedViewModel;
         }
+
+        private void Button_Click(object sender, System.Windows.RoutedEventArgs e)
+        {
+
+        }
     }
 
 }
