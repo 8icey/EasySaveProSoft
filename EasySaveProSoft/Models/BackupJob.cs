@@ -13,7 +13,10 @@ namespace EasySaveProSoft.Models
     public class BackupJob
     {
         public static SemaphoreSlim LargeFileLock = new SemaphoreSlim(1, 1);
-        public static long LargeFileThresholdBytes = 1L * 1024 * 1024 * 1024;
+        //public static long LargeFileThresholdBytes = 1L * 1024 * 1024 * 1024;
+        public static long LargeFileThresholdBytes => AppConfig.GetLargeFileThresholdBytes();
+
+
 
         public string Name { get; set; }
         public bool IsSelected { get; set; }

@@ -10,7 +10,7 @@ namespace EasySaveProSoft.Services
         private static readonly string ConfigFilePath = "config.ini";
         private static readonly Dictionary<string, string> _config = new();
 
-        // Charger au démarrage
+        // Load config on first use
         static AppConfig()
         {
             Load();
@@ -48,29 +48,44 @@ namespace EasySaveProSoft.Services
             _config[key] = value;
         }
 
-        // ✅ Nouvelle méthode : lire la liste ordonnée des extensions
+        // ✅ Read int with fallback
+        public static int GetInt(string key, int defaultValue)
+        {
+            if (_config.TryGetValue(key, out var value) && int.TryParse(value, out var result))
+                return result;
+            return defaultValue;
+        }
+
+        // ✅ Large file threshold (in bytes)
+        public static long GetLargeFileThresholdBytes()
+        {
+            int mb = GetInt("LargeFileThresholdMB", 1000); // default: 1000 MB
+            return mb * 1024L * 1024L;
+        }
+
+        // ✅ Priority file extensions (comma-separated)
         public static List<string> GetPriorityOrder()
         {
             string raw = Get("PriorityExtensions", "");
-            var list = new List<string>();
-            if (!string.IsNullOrWhiteSpace(raw))
-            {
-                foreach (var ext in raw.Split(','))
-                {
-                    var clean = ext.Trim().ToLower();
-                    if (!string.IsNullOrEmpty(clean))
-                        list.Add(clean.StartsWith(".") ? clean : "." + clean);
-                }
-            }
-            return list;
+            return raw.Split(',', StringSplitOptions.RemoveEmptyEntries)
+                      .Select(ext => ext.Trim().ToLower())
+                      .Where(ext => !string.IsNullOrWhiteSpace(ext))
+                      .Select(ext => ext.StartsWith(".") ? ext : "." + ext)
+                      .ToList();
         }
 
-        // ✅ Nouvelle méthode : enregistrer la liste ordonnée des extensions
         public static void SetPriorityOrder(List<string> extensions)
         {
             string joined = string.Join(",", extensions);
             Set("PriorityExtensions", joined);
             Save();
         }
+
+        public static void SetLargeFileThresholdMB(int mb)
+        {
+            Set("LargeFileThresholdMB", mb.ToString());
+            Save(); // Save to config.ini immediately
+        }
+
     }
 }

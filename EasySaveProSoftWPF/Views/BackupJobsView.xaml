@@ -64,10 +64,26 @@
         <ListBox Grid.Row="1" ItemsSource="{Binding BackupJobs}" SelectedItem="{Binding SelectedBackupJob}" Margin="5">
             <ListBox.ItemTemplate>
                 <DataTemplate>
-                    <StackPanel Orientation="Horizontal">
-                        <CheckBox IsChecked="{Binding IsSelected}" VerticalAlignment="Center" Margin="5"/>
-                        <TextBlock Text="{Binding Name}" VerticalAlignment="Center"/>
-                    </StackPanel>
+                    <Grid Margin="5">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="Auto"/>
+                            <!-- Checkbox -->
+                            <ColumnDefinition Width="2*"/>
+                            <!-- Name -->
+                            <ColumnDefinition Width="3*"/>
+                            <!-- SourcePath -->
+                            <ColumnDefinition Width="3*"/>
+                            <!-- TargetPath -->
+                            <ColumnDefinition Width="Auto"/>
+                            <!-- Type -->
+                        </Grid.ColumnDefinitions>
+
+                        <CheckBox Grid.Column="0" IsChecked="{Binding IsSelected}" VerticalAlignment="Center" Margin="5"/>
+                        <TextBlock Grid.Column="1" Text="{Binding Name}" VerticalAlignment="Center" Margin="5,0"/>
+                        <TextBlock Grid.Column="2" Text="{Binding SourcePath}" FontSize="11" Foreground="Gray" TextTrimming="CharacterEllipsis" Margin="5,0"/>
+                        <TextBlock Grid.Column="3" Text="{Binding TargetPath}" FontSize="11" Foreground="Gray" TextTrimming="CharacterEllipsis" Margin="5,0"/>
+                        <TextBlock Grid.Column="4" Text="{Binding Type}" FontSize="11" Foreground="DarkSlateBlue" VerticalAlignment="Center" Margin="5,0"/>
+                    </Grid>
                 </DataTemplate>
             </ListBox.ItemTemplate>
         </ListBox>

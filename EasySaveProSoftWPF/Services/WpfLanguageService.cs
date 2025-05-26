@@ -64,6 +64,7 @@ namespace EasySaveProSoft.WPF.Services
                     { "btn_movedown", "Go Down" },
                     { "btn_add_priority", "Add" },
                     { "btn_remove_priority", "Remove" },
+                     { "LblLargeFileThreshold", "Large File Threshold : " },
 
 
                 }
@@ -108,6 +109,7 @@ namespace EasySaveProSoft.WPF.Services
                     { "btn_movedown", "Descendre" },
                     { "btn_add_priority", "Ajouter" },
                     { "btn_remove_priority", "Retirer" },
+                     { "LblLargeFileThreshold", "Seuil de gros fichier : " },
 
 
 

@@ -42,6 +42,7 @@ namespace EasySaveProSoft.WPF.ViewModels
         public string btn_movedown => _lang.Translate("btn_movedown");
         public string btn_add_priority => _lang.Translate("btn_add_priority");
         public string btn_remove_priority => _lang.Translate("btn_remove_priority");
+        public string LblLargeFileThreshold => _lang.Translate("LblLargeFileThreshold");
 
 
         public LocalizationViewModel()

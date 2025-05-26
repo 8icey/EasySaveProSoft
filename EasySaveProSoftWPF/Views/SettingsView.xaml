@@ -68,6 +68,13 @@
                         CommandParameter="{Binding SelectedExtension}" Width="100" Margin="5"/>
             </StackPanel>
 
+            <TextBlock Text="{Binding Loc.LblLargeFileThreshold}" FontSize="16" Margin="15 10 5 5"/>
+            <StackPanel Orientation="Horizontal" Margin="5">
+                <TextBlock Text="Threshold (MB):" Margin="5" VerticalAlignment="Center"/>
+                <TextBox Width="100" Margin="5" Text="{Binding LargeFileThresholdMB, UpdateSourceTrigger=PropertyChanged}" />
+            </StackPanel>
+
+
         </StackPanel>
     </ScrollViewer>
 </UserControl>
