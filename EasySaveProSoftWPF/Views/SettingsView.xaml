@@ -75,16 +75,16 @@
             </StackPanel>
             <!-- 🌐 Réglages Réseau -->
             <!-- Réseau -->
-            <TextBlock Text="Paramètres Réseau" FontWeight="Bold" FontSize="16" Margin="15 10 5 5"/>
+            <TextBlock Text="{Binding Loc.lbl_settres}" FontWeight="Bold" FontSize="16" Margin="15 10 5 5"/>
             <StackPanel Orientation="Horizontal" Margin="5">
-                <TextBlock Text="Seuil réseau (KB/s):" VerticalAlignment="Center" Margin="5"/>
+                <TextBlock Text="{Binding Loc.thresres}" VerticalAlignment="Center" Margin="5"/>
                 <TextBox x:Name="NetworkThresholdTextBox" Width="100" Margin="5"/>
             </StackPanel>
             <StackPanel Orientation="Horizontal" Margin="5">
-                <TextBlock Text="Jobs max en surcharge :" VerticalAlignment="Center" Margin="5"/>
+                <TextBlock Text="{Binding Loc.surchargemax}" VerticalAlignment="Center" Margin="5"/>
                 <TextBox x:Name="MaxJobsTextBox" Width="100" Margin="5"/>
             </StackPanel>
-            <Button Content="💾 Appliquer les paramètres réseau" Width="250" Margin="5" Click="ApplyNetworkSettings_Click"/>
+            <Button Content="{Binding Loc.applyres}" Width="250" Margin="5" Click="ApplyNetworkSettings_Click"/>
 
 
 

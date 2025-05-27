@@ -65,6 +65,10 @@ namespace EasySaveProSoft.WPF.Services
                     { "btn_add_priority", "Add" },
                     { "btn_remove_priority", "Remove" },
                      { "LblLargeFileThreshold", "Large File Threshold : " },
+                      { "lbl_settres", "Network Settings" },
+                     { "thresres", "Network threshold (KB/s): " },
+                       { "surchargemax", "Max jobs overload: " },
+                     { "applyres", "Apply network settings" },
 
 
                 }
@@ -110,6 +114,10 @@ namespace EasySaveProSoft.WPF.Services
                     { "btn_add_priority", "Ajouter" },
                     { "btn_remove_priority", "Retirer" },
                      { "LblLargeFileThreshold", "Seuil de gros fichier : " },
+                       { "lbl_settres", "Paramètres Réseau" },
+                     { "thresres", "Seuil réseau (KB/s): " },
+                       { "surchargemax", "Jobs max en surcharge : " },
+                     { "applyres", "Appliquer les paramétres réseau" },
 
 
 
