@@ -45,6 +45,12 @@ namespace EasySaveProSoft.WPF.ViewModels
         public string LblLargeFileThreshold => _lang.Translate("LblLargeFileThreshold");
 
 
+        public string t1 => _lang.Translate("LblLargeFileThreshold");
+        public string t2 => _lang.Translate("LblLargeFileThreshold");
+        public string t3 => _lang.Translate("LblLargeFileThreshold");
+        public string t4 => _lang.Translate("LblLargeFileThreshold");
+
+
         public LocalizationViewModel()
         {
             _lang.PropertyChanged += (_, _) => OnPropertyChanged(null); // Refresh all bindings when language changes
