@@ -249,39 +249,85 @@ namespace EasySaveProSoft.WPF.ViewModels
             if (SoftwareDetector.IsBlockedSoftwareRunning())
             {
                 string running = SoftwareDetector.GetFirstBlockedProcess();
-                MessageBox.Show(string.Format(WpfLanguageService.Instance.Translate("msg_blocked_software"), running), "Blocked Software", MessageBoxButton.OK, MessageBoxImage.Warning);
+                MessageBox.Show(
+                    string.Format(WpfLanguageService.Instance.Translate("msg_blocked_software"), running),
+                    "Blocked Software Running",
+                    MessageBoxButton.OK,
+                    MessageBoxImage.Warning
+                );
                 return;
             }
 
-            if (!BackupJobs.Any())
+            if (BackupJobs.Count == 0)
             {
                 MessageBox.Show(WpfLanguageService.Instance.Translate("msg_no_jobs"));
                 return;
             }
 
+            NetworkMonitorService.StartMonitoring();
+
+            var pauseEvent = new ManualResetEventSlim(true);
             var token = _cts.Token;
             var progressVM = new AllBackupsProgressViewModel();
-            new AllBackupsProgressWindow(progressVM).Show();
+            var progressWindow = new AllBackupsProgressWindow(progressVM);
+            progressWindow.Show();
+
+            int maxParallel = int.MaxValue; // Illimité
+            var tasks = new List<Task>();
 
             foreach (var job in BackupJobs)
             {
-                var vm = new BackupProgressViewModel { JobName = job.Name };
-                progressVM.AddJob(vm);
+                var jobVM = new BackupProgressViewModel
+                {
+                    JobName = job.Name,
+                    ProgressValue = 0,
+                    SizeText = "0 B",
+                    EstimatedTime = ""
+                };
+
+                progressVM.AddJob(jobVM);
 
                 job.OnProgressUpdated += (progress, size, eta) =>
                 {
                     Application.Current.Dispatcher.Invoke(() =>
                     {
-                        vm.ProgressValue = progress;
-                        vm.SizeText = size;
-                        vm.EstimatedTime = eta;
+                        jobVM.ProgressValue = progress;
+                        jobVM.SizeText = size;
+                        jobVM.EstimatedTime = eta;
                     });
                 };
 
-                new Thread(() => job.Execute(_pauseEvent, token).Wait()).Start();
-                ResetProgress();
+                var task = Task.Run(async () =>
+                {
+                    int currentMax = NetworkMonitorService.IsNetworkOverloaded()
+                        ? AppConfig.GetMaxParallelJobsOnHighLoad()
+                        : int.MaxValue;
+
+                    using (var semaphore = new SemaphoreSlim(currentMax))
+                    {
+                        await semaphore.WaitAsync();
+
+                        try
+                        {
+                            await job.Execute(pauseEvent, token);
+                            Application.Current.Dispatcher.Invoke(() => _logger.LogJobStatus(job, true));
+                        }
+                        finally
+                        {
+                            semaphore.Release();
+                        }
+                    }
+                });
+
+                tasks.Add(task);
             }
+
+            await Task.WhenAll(tasks);
+            NetworkMonitorService.StopMonitoring();
+
+            MessageBox.Show(WpfLanguageService.Instance.Translate("msg_all_executed"));
         }
+
 
         private async Task ExecuteSelectedJobs()
         {

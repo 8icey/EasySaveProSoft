@@ -20,6 +20,9 @@ namespace EasySaveProSoft.WPF.Views
         private List<string> _extensions = new();
         private List<string> _blockedSoftware = new();
         private readonly LanguageService _languageService;
+        private int _networkThreshold = AppConfig.GetNetworkThreshold();
+        private int _maxParallelJobs = AppConfig.GetMaxParallelJobsOnHighLoad();
+
         //private void ChangetoFr()
         //{
         //    MainContentFrame.Content = new SettingsView();
@@ -29,6 +32,9 @@ namespace EasySaveProSoft.WPF.Views
             InitializeComponent();
             LoadExtensions();
             LoadBlockedSoftware();
+            NetworkThresholdTextBox.Text = _networkThreshold.ToString();
+            MaxJobsTextBox.Text = _maxParallelJobs.ToString();
+
 
             _languageService = new LanguageService();
             //LanguageComboBox.SelectedIndex = _languageService.CurrentLanguage == "en" ? 0 : 1;
@@ -177,5 +183,22 @@ namespace EasySaveProSoft.WPF.Views
 
 
         }
+
+        private void ApplyNetworkSettings_Click(object sender, RoutedEventArgs e)
+        {
+            if (int.TryParse(NetworkThresholdTextBox.Text, out int threshold) &&
+                int.TryParse(MaxJobsTextBox.Text, out int maxJobs))
+            {
+                AppConfig.Set("networkThreshold", threshold.ToString());
+                AppConfig.Set("maxParallelJobsOnHighLoad", maxJobs.ToString());
+                AppConfig.Save();
+                MessageBox.Show("Paramètres réseau enregistrés !");
+            }
+            else
+            {
+                MessageBox.Show("Veuillez entrer des valeurs valides pour le seuil et le nombre de jobs.");
+            }
+        }
+
     }
 }

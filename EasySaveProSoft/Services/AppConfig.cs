@@ -87,5 +87,22 @@ namespace EasySaveProSoft.Services
             Save(); // Save to config.ini immediately
         }
 
+        public static int GetNetworkThreshold()
+        {
+            if (_config.TryGetValue("networkThreshold", out string value) && int.TryParse(value, out int result))
+                return result;
+
+            return 1000; // défaut : 1000 KB/s
+        }
+
+        public static int GetMaxParallelJobsOnHighLoad()
+        {
+            if (_config.TryGetValue("maxParallelJobsOnHighLoad", out string value) && int.TryParse(value, out int result))
+                return result;
+
+            return 1; // défaut : 1 job si surcharge
+        }
+
+
     }
 }

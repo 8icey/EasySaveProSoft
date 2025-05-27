@@ -73,6 +73,20 @@
                 <TextBlock Text="Threshold (MB):" Margin="5" VerticalAlignment="Center"/>
                 <TextBox Width="100" Margin="5" Text="{Binding LargeFileThresholdMB, UpdateSourceTrigger=PropertyChanged}" />
             </StackPanel>
+            <!-- 🌐 Réglages Réseau -->
+            <!-- Réseau -->
+            <TextBlock Text="Paramètres Réseau" FontWeight="Bold" FontSize="16" Margin="15 10 5 5"/>
+            <StackPanel Orientation="Horizontal" Margin="5">
+                <TextBlock Text="Seuil réseau (KB/s):" VerticalAlignment="Center" Margin="5"/>
+                <TextBox x:Name="NetworkThresholdTextBox" Width="100" Margin="5"/>
+            </StackPanel>
+            <StackPanel Orientation="Horizontal" Margin="5">
+                <TextBlock Text="Jobs max en surcharge :" VerticalAlignment="Center" Margin="5"/>
+                <TextBox x:Name="MaxJobsTextBox" Width="100" Margin="5"/>
+            </StackPanel>
+            <Button Content="💾 Appliquer les paramètres réseau" Width="250" Margin="5" Click="ApplyNetworkSettings_Click"/>
+
+
 
 
         </StackPanel>
