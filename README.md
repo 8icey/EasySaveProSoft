@@ -96,13 +96,13 @@ Want to help improve EasySaveProSoft? Fork the project and submit a PR!
 
 ## 📄 License
 
-MIT License – you can use, modify, and distribute this software freely.
+CESI.
 
 ---
 
 ## 👥 Authors
 
-- Noufel Ouanoughi & Team  
+- Noufel Ouanoughi & Team (Kouba Amine, Hachi Idris, Bensalem Mohammed)  
 - Developed as part of a 2025 Software Engineering project
 
 ---
