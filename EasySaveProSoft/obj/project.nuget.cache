@@ -1,8 +1,10 @@
 {
   "version": 2,
-  "dgSpecHash": "H9BuUw/nh4o=",
+  "dgSpecHash": "tzEFfkha8w8=",
   "success": true,
   "projectFilePath": "C:\\Users\\wbnsn\\source\\repos\\EasySaveProSoft\\EasySaveProSoft\\EasySaveProSoft.csproj",
-  "expectedPackageFiles": [],
+  "expectedPackageFiles": [
+    "C:\\Users\\wbnsn\\.nuget\\packages\\newtonsoft.json\\13.0.3\\newtonsoft.json.13.0.3.nupkg.sha512"
+  ],
   "logs": []
 }
