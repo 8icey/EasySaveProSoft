@@ -102,7 +102,7 @@ CESI.
 
 ## 👥 Authors
 
-- Noufel Ouanoughi & Team (Kouba Amine, Hachi Idris, Bensalem Mohammed)  
+- Noufel Ouanoughi ,Kouba Amine, Hachi Idris and Bensalem Mohammed
 - Developed as part of a 2025 Software Engineering project
 
 ---
